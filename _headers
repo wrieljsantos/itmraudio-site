@@ -1,0 +1,16 @@
+/robots.txt
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=3600
+/sitemap.xml
+  Content-Type: application/xml; charset=utf-8
+  Cache-Control: public, max-age=3600
+/badge
+  X-Robots-Tag: noindex, follow
+/badge.html
+  X-Robots-Tag: noindex, follow
+/tools/*
+  X-Robots-Tag: noindex
+/tests/*
+  X-Robots-Tag: noindex
+/README.md
+  X-Robots-Tag: noindex

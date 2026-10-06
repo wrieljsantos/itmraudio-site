@@ -1,9 +1,10 @@
 from pathlib import Path
+import os
 
 from playwright.sync_api import sync_playwright
 
 
-BASE = Path.cwd().resolve().as_uri()
+BASE = os.environ.get("SITE_BASE_URL", Path.cwd().resolve().as_uri()).rstrip("/")
 OUT = Path("test-artifacts")
 OUT.mkdir(exist_ok=True)
 
