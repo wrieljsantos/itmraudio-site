@@ -8,7 +8,7 @@ OUT = Path("test-artifacts")
 OUT.mkdir(exist_ok=True)
 
 PAGES = {
-    "home": ("/index.html", "Stay on the song."),
+    "coming-soon": ("/index.html", "Stay on the song."),
     "vox": ("/arc-vox.html", "Keep your head on the song."),
     "fx": ("/arc-fx.html", "Quit using the sound exactly as you found it."),
 }
@@ -52,6 +52,12 @@ def main() -> None:
 
                 if console_errors:
                     failures.append(f"{viewport_name}/{page_name}: console errors {console_errors}")
+
+                if page_name == "coming-soon":
+                    if page.locator("#signup-form input[type=email]").count() != 1:
+                        failures.append(f"{viewport_name}/{page_name}: signup email field missing")
+                    if page.locator("#signup-form button[type=submit]").is_disabled():
+                        failures.append(f"{viewport_name}/{page_name}: signup button is disabled")
 
                 page.screenshot(path=str(OUT / f"{page_name}-{viewport_name}.png"), full_page=True)
                 page.close()
