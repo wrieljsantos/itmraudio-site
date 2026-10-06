@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ITMR Audio · Coming soon</title>
+<meta name="description" content="Arc Vox handles the vocal chain. Arc Fx turns familiar sounds into something new. Sign-up coming soon. / Registro próximamente.">
+<link rel="icon" href="assets/brand/itmr-audio-symbol-signal.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;600&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@500&family=Instrument+Serif:ital@1&display=swap">
+<link rel="stylesheet" href="assets/itmr.css">
+<style>
+/* Coming-soon page: compact version of the home. Animated mark → perspective lift-away through both
+   plugins' live front faces → "sign-up coming soon". English / Spanish switch, no form yet. */
+:root{--ink:#0c0e0b;--ink-2:#171a15;--line:#23261f;--paper:#f4f3e9;--moss:#a3a597;--signal:#d5ff3f}
+html{background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--paper);font:400 17px/1.6 Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip}
+a{color:inherit;text-decoration:none}
+.itmr-bar{position:sticky;top:0;background:rgba(12,14,11,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.w{max-width:1240px;margin:0 auto;padding:0 24px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.serif{font-family:"Instrument Serif",Georgia,serif;font-weight:400;letter-spacing:-.01em}
+/* language switch */
+.lang{margin-left:auto;display:flex;border:1px solid #2a2e26;border-radius:2px;overflow:hidden}
+.lang button{min-width:44px;min-height:36px;padding:0 10px;background:transparent;border:0;color:var(--moss);font:500 12px/1 "IBM Plex Mono",monospace;letter-spacing:.06em;cursor:pointer}
+.lang button[aria-pressed="true"]{background:var(--paper);color:#10120f}
+.lang button:focus-visible{outline:2px solid var(--signal);outline-offset:-2px}
+.soon-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid #2a2e26;padding:7px 12px;border-radius:2px;color:var(--moss);white-space:nowrap}
+.soon-chip i{width:7px;height:7px;border-radius:50%;background:var(--signal);animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.soon-chip i{animation:none}}
+/* hero: compact */
+.hero{padding:44px 0 28px}
+.hero .g{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:40px;align-items:center}
+.hero h1{margin:16px 0 0;font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:clamp(46px,7vw,96px);line-height:.95;letter-spacing:-.04em}
+.hero p{margin:18px 0 24px;color:var(--moss);font-size:19px;max-width:34ch}
+.btns{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.b1{background:var(--signal);color:#10120f;padding:12px 20px;border-radius:2px;font-weight:600}
+.b1:hover{background:#e4ff7a}
+.logoD{width:100%;max-width:400px;justify-self:end}
+.logoD canvas{width:100%;aspect-ratio:1/1;display:block}
+/* final layer */
+.btn-off{display:inline-flex;align-items:center;gap:10px;min-height:48px;padding:0 24px;border-radius:2px;border:1px dashed #4a5040;background:var(--ink-2);color:var(--paper);font:600 16px Manrope,sans-serif;cursor:not-allowed}
+.btn-off span{font:500 11px/1 "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:#10120f;background:var(--signal);padding:5px 7px;border-radius:2px}
+.itmr-foot .w{padding:32px 24px 44px}
+@media (max-width:860px){
+.hero{padding:28px 0 20px}
+.hero .g{grid-template-columns:minmax(0,1fr);gap:20px}
+.logoD{max-width:300px;margin:0 auto;justify-self:center}
+.itmr-bar .soon-chip{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="itmr-bar"><div class="w">
+<img src="assets/brand/itmr-audio-horizontal-paper.svg" alt="ITMR Audio" width="180" height="29">
+<span class="soon-chip mono"><i></i><span data-i18n="chip">Coming soon</span></span>
+<div class="lang" role="group" aria-label="Language / Idioma"><button type="button" data-lang="en" aria-pressed="true">EN</button><button type="button" data-lang="es" aria-pressed="false">ES</button></div>
+</div></header>
+
+<main>
+<section class="hero"><div class="w g">
+<div>
+<div class="mono" style="color:var(--signal)" data-i18n="kicker">A signal. A frame. A point of view.</div>
+<h1 data-i18n-html="h1">Stay on the <span class="serif">song</span>.</h1>
+<p data-i18n="lede">Arc Vox handles the vocal chain. Arc Fx turns familiar sounds into parts that belong to your record.</p>
+<div class="btns"><a class="b1" href="#tools" data-i18n="see">See the plugins ↓</a><span class="soon-chip mono"><i></i><span data-i18n="signupSoon">Sign-up coming soon</span></span></div>
+</div>
+<div class="logoD"><canvas data-live="logo" data-i18n-aria="logoAria" aria-label="The ITMR Audio mark, its four bars turning into live level meters and back"></canvas></div>
+</div></section>
+
+<section class="liftD" id="tools" style="height:300vh;--stick:56px" aria-label="THE ARC VOX · THE ARC FX">
+<div class="stageD">
+<div class="layerD" style="--fc:#d3ff19">
+<div class="frD" style="background:var(--ink)">
+<div class="lh"><div><div class="k" data-i18n="voxK">01 · Vocal production · launching soon</div><div class="t" data-i18n-html="voxT">Arc Vox handles the <i>vocal chain</i>.</div></div><p data-i18n="voxP">Learn Voice builds the starting point. CONTROL and CHARACTER let you steer it.</p></div>
+<div class="live" data-live="vox-voice"><img src="assets/vox/01-voice.webp" alt="THE ARC VOX"><canvas></canvas></div>
+</div>
+</div>
+<div class="layerD" style="--fc:#b8ff1f;opacity:0">
+<div class="frD" style="background:var(--ink)">
+<div class="lh"><div><div class="k" data-i18n="fxK">02 · Modular effects · coming soon</div><div class="t" data-i18n-html="fxT">Quit using the sound exactly as you <i>found it</i>.</div></div><p data-i18n="fxP">Turn a plain or familiar sound into a part that belongs to your record.</p></div>
+<div class="live" data-live="fx-create"><img src="assets/fx/scr/01-create.webp" alt="THE ARC FX"><canvas></canvas></div>
+</div>
+</div>
+<div class="layerD txt" id="signup" style="--fc:#d5ff3f;opacity:0">
+<div class="kD" data-i18n="suK">[ Sign up ]</div>
+<div class="bigD" data-i18n-html="suBig">Sign-up <i>opens</i> soon.</div>
+<p class="subD" data-i18n="suSub">We're getting the list ready. Come back here for early access and launch pricing.</p>
+<button type="button" class="btn-off" disabled aria-disabled="true"><b data-i18n="suBtn">Sign up</b><span data-i18n="soonTag">Coming soon</span></button>
+</div>
+<div class="dotsD" aria-hidden="true"><i></i><i></i><i></i></div>
+</div>
+</section>
+<div class="w"><div class="demo-tag"><span data-i18n="demo">The motion on this site runs on a demo signal.</span><span>ARC VOX · ARC FX</span></div></div>
+</main>
+
+<footer class="itmr-foot"><div class="w">
+<img src="assets/brand/itmr-audio-horizontal-paper.svg" alt="ITMR Audio" width="162" height="26">
+<span data-i18n="foot">© 2026 ITMR Audio · itmraudio.com</span>
+</div></footer>
+
+<script src="assets/itmr.js"></script>
+<script>
+(function(){
+var T={
+ en:{chip:'Coming soon',kicker:'Tools that keep the engineering out of your way.',h1:'Stay on the <span class="serif">song</span>.',
+  lede:'Arc Vox handles the vocal chain. Arc Fx turns familiar sounds into parts that belong to your record.',see:'Meet the plugins ↓',signupSoon:'Sign-up coming soon',
+  logoAria:'The ITMR Audio mark, its four bars turning into live level meters and back',
+  voxK:'01 · Vocal production · launching soon',voxT:'Arc Vox handles the <i>vocal chain</i>.',voxP:'Learn Voice builds the starting point. CONTROL and CHARACTER let you steer it.',
+  fxK:'02 · Modular effects · coming soon',fxT:'Quit using the sound exactly as you <i>found it</i>.',fxP:'Turn a plain or familiar sound into a part that belongs to your record.',
+  suK:'[ Sign up ]',suBig:'Sign-up <i>opens</i> soon.',suSub:"We're getting the list ready. Come back here for early access and launch pricing.",
+  suBtn:'Sign up',soonTag:'Coming soon',demo:'The motion on this site runs on a demo signal.',foot:'© 2026 ITMR Audio · itmraudio.com',
+  title:'ITMR Audio · Coming soon'},
+ es:{chip:'Próximamente',kicker:'Herramientas que no interrumpen tu proceso.',h1:'Mantente en la <span class="serif">canción</span>.',
+  lede:'Arc Vox se encarga de la cadena vocal. Arc Fx convierte sonidos conocidos en partes que pertenecen a tu disco.',see:'Conoce los plugins ↓',signupSoon:'Registro próximamente',
+  logoAria:'El logo de ITMR Audio: sus cuatro barras se convierten en medidores de nivel y vuelven',
+  voxK:'01 · Producción vocal · muy pronto',voxT:'Arc Vox se encarga de la <i>cadena vocal</i>.',voxP:'Learn Voice crea el punto de partida. CONTROL y CHARACTER te permiten dirigir el resultado.',
+  fxK:'02 · Efectos modulares · próximamente',fxT:'Deja de usar el sonido tal como lo <i>encontraste</i>.',fxP:'Convierte un sonido común o conocido en una parte que pertenezca a tu disco.',
+  suK:'[ Registro ]',suBig:'El registro <i>abre</i> pronto.',suSub:'Estamos preparando la lista. Vuelve aquí para acceso anticipado y precio de lanzamiento.',
+  suBtn:'Registrarse',soonTag:'Próximamente',demo:'El movimiento de este sitio usa una señal de demostración.',foot:'© 2026 ITMR Audio · itmraudio.com',
+  title:'ITMR Audio · Próximamente'}
+};
+function set(l){
+  var d=T[l]||T.en; document.documentElement.lang=l; document.title=d.title;
+  document.querySelectorAll('[data-i18n]').forEach(function(e){var k=e.getAttribute('data-i18n'); if(d[k]!=null) e.textContent=d[k];});
+  document.querySelectorAll('[data-i18n-html]').forEach(function(e){var k=e.getAttribute('data-i18n-html'); if(d[k]!=null) e.innerHTML=d[k];});
+  document.querySelectorAll('[data-i18n-aria]').forEach(function(e){var k=e.getAttribute('data-i18n-aria'); if(d[k]!=null) e.setAttribute('aria-label',d[k]);});
+  document.querySelectorAll('.lang button').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-lang')===l));});
+  try{localStorage.setItem('itmr-lang',l);}catch(e){}
+}
+var saved=null; try{saved=localStorage.getItem('itmr-lang');}catch(e){}
+var q=(location.search.match(/[?&]lang=(en|es)/)||[])[1];
+set(q||saved||((navigator.language||'en').toLowerCase().indexOf('es')===0?'es':'en'));
+document.querySelectorAll('.lang button').forEach(function(b){b.addEventListener('click',function(){set(b.getAttribute('data-lang'));});});
+})();
+</script>
+</body>
+</html>

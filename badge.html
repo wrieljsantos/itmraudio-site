@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hanging Faceplate</title>
+<link rel="icon" href="assets/brand/itmr-audio-symbol-signal.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500&family=Manrope:wght@400;600&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@500&family=Instrument+Serif:ital@1&display=swap">
+<style>
+/* Prototype: an ITMR plugin faceplate hanging from a lime cable. Verlet rope + damped rigid card, three.js.
+   Front = THE ARC VOX (live analyzer), back = THE ARC FX (live create view). Drag to swing, double-click to flip. */
+:root{--ink:#0c0e0b;--paper:#f4f3e9;--moss:#a3a597;--signal:#d5ff3f;--line:#23261f}
+html,body{margin:0;height:100%;background:var(--ink);color:var(--paper);font:400 16px/1.5 Manrope,system-ui,sans-serif;overflow:hidden}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#c.drag{cursor:grabbing}
+.top{position:fixed;left:0;right:0;top:0;display:flex;align-items:center;gap:20px;padding:18px 24px;pointer-events:none}
+.top img{height:26px;display:block}
+.top .tag{margin-left:auto;font:500 11px/1 "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--moss)}
+.copy{position:fixed;left:24px;bottom:28px;max-width:520px;pointer-events:none}
+.copy .k{font:500 12px/1 "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--signal)}
+.copy h1{margin:12px 0 0;font:500 clamp(36px,5vw,64px)/.98 "Space Grotesk",sans-serif;letter-spacing:-.035em}
+.copy h1 i{font-family:"Instrument Serif",serif;font-weight:400;letter-spacing:-.01em}
+.copy p{margin:12px 0 0;color:var(--moss);font-size:15px}
+.ctl{position:fixed;right:24px;bottom:28px;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.ctl button{min-height:44px;padding:0 16px;border-radius:2px;font:600 14px Manrope,sans-serif;cursor:pointer;border:1px solid #2a2e26;background:#171a15;color:var(--paper)}
+.ctl button.p{background:var(--signal);color:#10120f;border-color:var(--signal)}
+.ctl button:hover{border-color:var(--paper)}
+.ctl button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+.live-src{position:fixed;left:-10000px;top:0;width:640px;height:400px}
+.load{position:fixed;inset:0;display:grid;place-items:center;font:500 12px "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--moss);pointer-events:none;transition:opacity .4s}
+@media (max-width:720px){.top .tag{display:none}.copy{left:16px;right:16px;bottom:96px}.copy p{display:none}.ctl{left:16px;right:16px;bottom:20px;justify-content:stretch}.ctl button{flex:1}}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<canvas id="c" aria-label="THE ARC VOX faceplate hanging from an ITMR Audio cable. Drag to swing it, double-click to flip to THE ARC FX."></canvas>
+<header class="top"><img src="assets/brand/itmr-audio-horizontal-paper.svg" alt="ITMR Audio" width="162" height="26"><span class="tag">Prototype · hanging faceplate</span></header>
+<div class="copy"><div class="k" id="who">THE ARC VOX · front</div><h1>Grab it. <i>Flip</i> it.</h1><p>Drag the plugin to swing it on the cable. Double-click or press Flip to see what's on the other side. The analyzers run on a demo signal.</p></div>
+<div class="ctl"><button type="button" id="flip" class="p">Flip ↻</button><button type="button" id="drop">Drop it</button></div>
+<canvas class="live-src" id="lv" aria-hidden="true"></canvas>
+<canvas class="live-src" id="lf" aria-hidden="true"></canvas>
+<div class="load" id="load">Loading faceplate…</div>
+<script src="assets/itmr.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const cv = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+const scene = new THREE.Scene(); scene.background = new THREE.Color('#0c0e0b');
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
+
+const key = new THREE.DirectionalLight('#ffffff', 1.4); key.position.set(-3, 4, 5); scene.add(key);
+const rim = new THREE.DirectionalLight('#e9ffb0', 0.55); rim.position.set(4, 1, -3); scene.add(rim);
+scene.add(new THREE.AmbientLight('#ffffff', 0.25));
+
+/* ---------- faceplate textures: screenshot + live overlay, composited every frame ---------- */
+const W = 1280, H = 800;
+const mkFace = (src, liveName, liveCanvas) => {
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d'); const img = new Image(); img.src = src;
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;
+  const st = {};
+  return { tex, img, draw(ts) {
+    if (!img.complete || !img.naturalWidth) return false;
+    g.drawImage(img, 0, 0, W, H);
+    const fn = window.ITMR_LIVE && window.ITMR_LIVE[liveName];
+    if (fn) { fn(liveCanvas, st, ts); g.drawImage(liveCanvas, 0, 0, W, H); }
+    tex.needsUpdate = true; return true;
+  } };
+};
+const vox = mkFace('assets/vox/01-voice.webp', 'vox-voice', document.getElementById('lv'));
+const fx = mkFace('assets/fx/scr/01-create.webp', 'fx-create', document.getElementById('lf'));
+
+/* ---------- card ---------- */
+const CW = 2.0, CH = 1.25, CT = 0.035;
+const edge = new THREE.MeshPhysicalMaterial({ color: '#1a1d1c', metalness: 0.85, roughness: 0.32, clearcoat: 1, clearcoatRoughness: 0.2 });
+const faceMat = (map) => new THREE.MeshPhysicalMaterial({ map, roughness: 0.38, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.12 });
+const card = new THREE.Mesh(new THREE.BoxGeometry(CW, CH, CT), [edge, edge, edge, edge, faceMat(vox.tex), faceMat(fx.tex)]);
+const cardPivot = new THREE.Group(); cardPivot.add(card); card.position.y = -CH / 2 - 0.07; scene.add(cardPivot);
+// clip: metal tab + ring at the top centre
+const metal = new THREE.MeshStandardMaterial({ color: '#c9ccc6', metalness: 1, roughness: 0.25 });
+const tab = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.12, 0.05), metal); tab.position.y = -0.06; cardPivot.add(tab);
+const ring = new THREE.Mesh(new THREE.TorusGeometry(0.055, 0.014, 12, 32), metal); ring.position.y = 0.0; ring.rotation.y = Math.PI / 2; cardPivot.add(ring);
+
+/* ---------- cable: lime strap printed with ITMR AUDIO ---------- */
+const strapC = document.createElement('canvas'); strapC.width = 1024; strapC.height = 64;
+{ const g = strapC.getContext('2d'); g.fillStyle = '#d5ff3f'; g.fillRect(0, 0, 1024, 64); g.fillStyle = '#10120f';
+  g.font = '700 30px "IBM Plex Mono", monospace'; g.textBaseline = 'middle';
+  for (let x = 10; x < 1024; x += 256) g.fillText('ITMR AUDIO ·', x, 34); }
+const strapTex = new THREE.CanvasTexture(strapC); strapTex.colorSpace = THREE.SRGBColorSpace; strapTex.wrapS = THREE.RepeatWrapping;
+const N = 16;
+const strapGeo = new THREE.BufferGeometry();
+const sPos = new Float32Array(N * 2 * 3), sUv = new Float32Array(N * 2 * 2), sIdx = [];
+for (let i = 0; i < N; i++) { sUv.set([i / (N - 1) * 3, 0, i / (N - 1) * 3, 1], i * 4); if (i < N - 1) { const a = i * 2; sIdx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } }
+strapGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3)); strapGeo.setAttribute('uv', new THREE.BufferAttribute(sUv, 2)); strapGeo.setIndex(sIdx);
+const strap = new THREE.Mesh(strapGeo, new THREE.MeshStandardMaterial({ map: strapTex, roughness: 0.7, side: THREE.DoubleSide }));
+strap.frustumCulled = false; scene.add(strap);
+
+/* ---------- physics: verlet rope + damped card angles ---------- */
+let anchor = new THREE.Vector3(0, 2.6, 0), segLen = 0.15;
+const P = [], Pp = [];
+function layout() {
+  const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  const tanH = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+  const z = Math.max(5, 2.7 / (2 * tanH * camera.aspect)); // keep the whole card in frame on phones
+  camera.position.set(0, 0.25, z); camera.lookAt(0, 0.1, 0); camera.updateProjectionMatrix();
+  const halfH = z * tanH;
+  anchor.set(0, halfH + 0.4, 0);
+  segLen = (anchor.y - 0.45) / (N - 1);
+}
+layout();
+for (let i = 0; i < N; i++) { const p = new THREE.Vector3(0.9 * (i / (N - 1)), anchor.y - i * segLen, 0); P.push(p); Pp.push(p.clone()); }
+// start swung out so it drops in with life
+const card3 = { roll: 0, rollV: 0, pitch: 0, pitchV: 0, yaw: 0.6, yawV: 0, yawT: 0 };
+addEventListener('resize', () => { layout(); });
+
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0), hit = new THREE.Vector3();
+let drag = false, grabOff = new THREE.Vector3(), dragPt = new THREE.Vector3(), lastDrag = new THREE.Vector3(), dragVX = 0;
+const toWorld = (e) => { const r = cv.getBoundingClientRect(); ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1); ray.setFromCamera(ndc, camera); };
+cv.addEventListener('pointerdown', (e) => {
+  toWorld(e); const hits = ray.intersectObjects([card, tab], false); if (!hits.length) return;
+  ray.ray.intersectPlane(plane, hit); drag = true; cv.classList.add('drag'); cv.setPointerCapture(e.pointerId);
+  grabOff.copy(P[N - 1]).sub(hit); dragPt.copy(hit).add(grabOff); lastDrag.copy(dragPt);
+});
+cv.addEventListener('pointermove', (e) => { if (!drag) return; toWorld(e); if (ray.ray.intersectPlane(plane, hit)) dragPt.copy(hit).add(grabOff); });
+const end = (e) => { if (!drag) return; drag = false; cv.classList.remove('drag'); card3.yawV += Math.max(-9, Math.min(9, dragVX * 2.2)); };
+cv.addEventListener('pointerup', end); cv.addEventListener('pointercancel', end);
+const flip = () => { card3.yawT += Math.PI; card3.yawV += 3; };
+cv.addEventListener('dblclick', (e) => { toWorld(e); if (ray.intersectObjects([card, tab], false).length) flip(); });
+document.getElementById('flip').addEventListener('click', flip);
+document.getElementById('drop').addEventListener('click', () => { for (let i = 1; i < N; i++) { Pp[i].x -= 0.08 * (i / N); Pp[i].y -= 0.05; } card3.yawV += 4; });
+addEventListener('keydown', (e) => { if (e.key === 'f' || e.key === 'F') flip(); });
+
+const G = new THREE.Vector3(0, -9.8, 0), tmp = new THREE.Vector3();
+function step(dt, t) {
+  // rope: verlet integrate (end point heavier: it carries the card)
+  for (let i = 1; i < N; i++) {
+    const p = P[i], pp = Pp[i]; tmp.copy(p).sub(pp).multiplyScalar(0.985); if (tmp.length() > 0.045) tmp.setLength(0.045); // cap speed so a hard fling can't loop it over the anchor
+    pp.copy(p); p.add(tmp).addScaledVector(G, dt * dt * (i === N - 1 ? 1.6 : 1));
+    if (!RM) p.x += Math.sin(t * 0.7 + i * 0.3) * 0.00012 * i; // faint air movement so it never looks frozen
+  }
+  if (drag) { P[N - 1].lerp(dragPt, 0.6); dragVX = (P[N - 1].x - lastDrag.x) / dt; lastDrag.copy(P[N - 1]); }
+  P[0].copy(anchor);
+  for (let k = 0; k < 18; k++) {
+    for (let i = 0; i < N - 1; i++) {
+      const a = P[i], b = P[i + 1]; tmp.copy(b).sub(a); const d = tmp.length() || 1e-6, diff = (d - segLen) / d;
+      if (i === 0) b.addScaledVector(tmp, -diff); else { a.addScaledVector(tmp, diff * 0.5); b.addScaledVector(tmp, -diff * 0.5); }
+    }
+    if (drag) P[N - 1].copy(dragPt).lerp(P[N - 1], 0.4);
+    P[0].copy(anchor);
+  }
+  // card hangs from the rope end; roll/pitch chase the last segment with inertia, yaw is a slow torsion spring
+  const a = P[N - 2], b = P[N - 1];
+  const tRoll = Math.max(-0.95, Math.min(0.95, Math.atan2(b.x - a.x, a.y - b.y))), tPitch = Math.atan2(a.z - b.z, a.y - b.y) * 0.5;
+  card3.rollV += (-(card3.roll - tRoll) * 60 - card3.rollV * 7) * dt; card3.roll += card3.rollV * dt;
+  card3.pitchV += (-(card3.pitch - tPitch) * 50 - card3.pitchV * 7) * dt; card3.pitch += card3.pitchV * dt;
+  card3.yawV += (-(card3.yaw - card3.yawT) * 9 - card3.yawV * 2.2) * dt; card3.yaw += card3.yawV * dt;
+}
+
+const who = document.getElementById('who');
+const clock = new THREE.Clock(); let acc = 0, loaded = false;
+function frame() {
+  const dt = Math.min(clock.getDelta(), 1 / 20), t = clock.elapsedTime; acc += dt;
+  const h = 1 / 120; while (acc >= h) { step(h, t); acc -= h; }
+  // card transform
+  cardPivot.position.copy(P[N - 1]);
+  cardPivot.rotation.set(card3.pitch, card3.yaw, -card3.roll, 'ZYX');
+  // strap ribbon, flat to the camera, twisting into the clip at the bottom
+  for (let i = 0; i < N; i++) {
+    const p = P[i], q = P[Math.min(N - 1, i + 1)], o = P[Math.max(0, i - 1)];
+    const dx = q.x - o.x, dy = q.y - o.y, l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
+    const tw = (i / (N - 1)) ** 3 * card3.yaw, w = 0.07 * Math.max(0.25, Math.abs(Math.cos(tw)));
+    sPos.set([p.x - nx * w, p.y - ny * w, p.z - Math.sin(tw) * 0.07, p.x + nx * w, p.y + ny * w, p.z + Math.sin(tw) * 0.07], i * 6);
+  }
+  strapGeo.attributes.position.needsUpdate = true; strapGeo.computeVertexNormals();
+  // only the face toward the camera needs a fresh live texture
+  const front = Math.cos(card3.yaw) > 0, ts = performance.now() / 1000;
+  const ok = (front ? vox : fx).draw(ts); if (!loaded && ok) { loaded = true; vox.draw(ts); fx.draw(ts); document.getElementById('load').style.opacity = 0; }
+  const lbl = front ? 'THE ARC VOX · front' : 'THE ARC FX · back'; if (who.textContent !== lbl) who.textContent = lbl;
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

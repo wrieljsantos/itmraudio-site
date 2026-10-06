@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ITMR Audio</title>
+<meta name="description" content="ITMR Audio makes tools that keep artists focused on the song. Meet Arc Vox for vocal production and Arc Fx for turning familiar sounds into something new.">
+<link rel="icon" href="assets/brand/itmr-audio-symbol-signal.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Manrope:wght@400;600&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@500&family=Instrument+Serif:ital@1&display=swap">
+<link rel="stylesheet" href="assets/itmr.css">
+<style>
+/* Home: the ITMR house. Hero = headline + the living mark; then a perspective lift-away through
+   each plugin's front face; then the point of view; then early access. */
+:root{--ink:#0c0e0b;--ink-2:#171a15;--line:#23261f;--paper:#f4f3e9;--moss:#a3a597;--signal:#d5ff3f}
+html{background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--paper);font:400 17px/1.6 Manrope,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:clip}
+a{color:inherit;text-decoration:none}
+.itmr-bar{position:sticky;top:0;background:rgba(12,14,11,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.w{max-width:1240px;margin:0 auto;padding:0 24px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace;font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.serif{font-family:"Instrument Serif",Georgia,serif;font-weight:400;letter-spacing:-.01em}
+.hero{padding:64px 0 56px}
+.hero .g{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:48px;align-items:center}
+.hero h1{margin:20px 0 0;font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:clamp(52px,8vw,112px);line-height:.95;letter-spacing:-.04em}
+.hero p{margin:24px 0 32px;color:var(--moss);font-size:20px;max-width:32ch}
+.btns{display:flex;gap:12px;flex-wrap:wrap}
+.b1{background:var(--signal);color:#10120f;padding:13px 20px;border-radius:2px;font-weight:600}
+.b2{border:1px solid #2a2e26;background:var(--ink-2);padding:12px 20px;border-radius:2px;font-weight:600}
+.b1:hover{background:#e4ff7a}.b2:hover{border-color:var(--paper)}
+.logoD{width:100%;max-width:520px;justify-self:end}
+.logoD canvas{width:100%;aspect-ratio:1/1;display:block}
+.sec-h{padding:24px 0 0}
+.sec-h h2{margin:14px 0 0;font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:clamp(36px,5vw,60px);line-height:1;letter-spacing:-.03em}
+.lh a.go{padding:11px 16px;border-radius:2px;font-weight:600;white-space:nowrap;font-size:15px;color:#10120f;background:var(--fc)}
+.pr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;padding:40px 0 96px}
+.pr .frD{--fc:#f4f3e9}
+.pr b{display:block;font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:28px;margin-top:8px;line-height:1.15}
+.pr p{color:var(--moss);font-size:15px;margin:8px 0 0}
+[data-reveal]{opacity:0;transform:translateY(40px);transition:opacity .6s,transform .6s}
+[data-reveal].in{opacity:1;transform:none}
+.join{background:var(--paper);color:#10120f}
+.join .w{padding-top:80px;padding-bottom:80px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:end}
+.join h2{margin:12px 0 0;font-family:"Space Grotesk",sans-serif;font-weight:500;font-size:clamp(40px,6vw,80px);line-height:.95;letter-spacing:-.04em}
+.join form{display:flex;gap:10px;flex-wrap:wrap}
+.join input{flex:1 1 220px;min-height:48px;padding:0 14px;border:1px solid #10120f;background:transparent;font:inherit;color:#10120f;border-radius:2px}
+.join button{min-height:48px;padding:0 20px;background:#10120f;color:var(--paper);border:0;border-radius:2px;font:600 16px Manrope,sans-serif;cursor:pointer}
+.join .msg{margin-top:10px;font-size:14px;color:#59624f;min-height:1.4em}
+@media (max-width:860px){
+.hero .g{grid-template-columns:minmax(0,1fr);gap:28px}
+.logoD{max-width:340px;margin:0 auto;justify-self:center}
+.pr,.join .w{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+
+<header class="itmr-bar"><div class="w">
+<a href="index.html" aria-label="ITMR Audio home"><img src="assets/brand/itmr-audio-horizontal-paper.svg" alt="ITMR Audio" width="180" height="29"></a>
+<nav aria-label="Main"><a href="arc-vox.html">Arc Vox</a><a href="arc-fx.html">Arc Fx</a><a class="hs" href="#pov">Why ITMR</a></nav>
+<a class="ea" href="#join">Early access</a>
+</div></header>
+
+<main>
+<section class="hero"><div class="w g">
+<div>
+<div class="mono" style="color:var(--signal)">Tools that keep the engineering out of your way.</div>
+<h1>Stay on the <span class="serif">song</span>.</h1>
+<p>Arc Vox handles the vocal chain. Arc Fx turns familiar sounds into parts that belong to your record.</p>
+<div class="btns"><a class="b1" href="#tools">Meet the plugins →</a><a class="b2" href="#join">Join early access</a></div>
+</div>
+<div class="logoD"><canvas data-live="logo" aria-label="The ITMR Audio mark, its four bars turning into live level meters and back"></canvas></div>
+</div></section>
+
+<section class="sec-h" id="tools"><div class="w">
+<div class="mono" style="color:var(--moss)">[ 01 ] Arc Vox + Arc Fx</div>
+<h2>Less engineering between you and the <span class="serif">record</span>.</h2>
+</div></section>
+
+<section class="liftD" style="height:420vh;--stick:56px" aria-label="THE ARC VOX and THE ARC FX">
+<div class="stageD">
+<div class="layerD" style="--fc:#d3ff19">
+<div class="frD" style="background:var(--ink)">
+<div class="lh"><div><div class="k">01 · Vocal production · launching soon</div><div class="t">Arc Vox handles the <i>vocal chain</i>.</div></div><a class="go" href="arc-vox.html">Meet Arc Vox →</a></div>
+<div class="live" data-live="vox-voice"><img src="assets/vox/01-voice.webp" alt="Arc Vox voice view: input and processed spectrum, CONTROL and CHARACTER knobs"><canvas></canvas></div>
+</div>
+</div>
+<div class="layerD" style="--fc:#b8ff1f;opacity:0">
+<div class="frD" style="background:var(--ink)">
+<div class="lh"><div><div class="k">02 · Modular effects · early access</div><div class="t">Quit using the sound exactly as you <i>found it</i>.</div></div><a class="go" href="arc-fx.html">Meet Arc Fx →</a></div>
+<div class="live" data-live="fx-create"><img src="assets/fx/scr/01-create.webp" alt="Arc Fx create view: UNSTABLE and DRIFT knobs, the transform field, and Generate"><canvas></canvas></div>
+</div>
+</div>
+<div class="layerD txt" id="inside" style="--fc:#d5ff3f;opacity:0">
+<div class="kD">[ 02 ] Inside</div>
+<div class="bigD">Start fast. Open it up when you want <i>control</i>.</div>
+<p class="subD">Both plugins put the useful move first, then open into editable racks when you want to make every decision yourself.</p>
+<div class="btns" style="justify-content:center"><a class="frD" style="--fc:#d3ff19;padding:12px 26px;font-weight:600" href="arc-vox.html#tour">Open the Arc Vox rack →</a><a class="frD" style="--fc:#b8ff1f;padding:12px 26px;font-weight:600" href="arc-fx.html#tour">Open the Arc Fx pedals →</a></div>
+</div>
+<div class="dotsD" aria-hidden="true"><i></i><i></i><i></i></div>
+</div>
+</section>
+<div class="w"><div class="demo-tag"><span>The motion on this site runs on a demo signal.</span><span>Audio examples are in progress.</span></div></div>
+
+<section id="pov"><div class="w">
+<div class="pr">
+<div class="frD" data-reveal><div class="mono" style="color:var(--signal)">01 / Stay musical</div><b>Get to a useful move quickly.</b><p>Start with the result you want to hear, not a page of setup.</p></div>
+<div class="frD" data-reveal style="transition-delay:.1s"><div class="mono" style="color:var(--signal)">02 / Keep control</div><b>Go deeper when it matters.</b><p>Open the rack, change the order, and make the calls yourself.</p></div>
+<div class="frD" data-reveal style="transition-delay:.2s"><div class="mono" style="color:var(--signal)">03 / Know the move</div><b>No mystery processing.</b><p>The chain stays visible, editable, and honest about what it changes.</p></div>
+</div>
+</div></section>
+
+<section class="join" id="join"><div class="w">
+<div><div class="mono" style="color:#59624f">Early access</div><h2>Put it on your next <span class="serif">record</span>.</h2></div>
+<div>
+<p style="margin:0 0 18px;font-size:18px">Join once for Arc Vox, Arc Fx, early builds, and launch pricing.</p>
+<form id="join-form" novalidate><label for="em" style="position:absolute;left:-9999px">Email</label><input id="em" type="email" placeholder="you@studio.com" autocomplete="email" required><button type="submit">Get early access</button></form>
+<div class="msg" id="join-msg" role="status"></div>
+</div>
+</div></section>
+</main>
+
+<footer class="itmr-foot"><div class="w">
+<img src="assets/brand/itmr-audio-horizontal-paper.svg" alt="ITMR Audio" width="162" height="26">
+<nav aria-label="Footer"><a href="arc-vox.html">Arc Vox</a><a href="arc-fx.html">Arc Fx</a><a href="#join">Early access</a></nav>
+<span>© 2026 ITMR Audio · itmraudio.com</span>
+</div></footer>
+
+<script src="assets/itmr.js"></script>
+<script>
+document.getElementById('join-form').addEventListener('submit',function(e){e.preventDefault();var v=document.getElementById('em').value.trim(),m=document.getElementById('join-msg');
+if(!/^\S+@\S+\.\S+$/.test(v)){m.textContent='Enter a valid email address.';return;}m.textContent='Thanks. Signup is not connected yet, so nothing was sent.';});
+</script>
+</body>
+</html>

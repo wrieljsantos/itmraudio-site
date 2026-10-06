@@ -1,0 +1,900 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Arc Vox · ITMR Audio</title>
+<meta name="description" content="Arc Vox handles cleanup, tuning, de-essing, compression, tone, color, and space so artists can stay focused on the performance.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500&family=Manrope:wght@600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@1&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: obsidian stage under lime signal ribbons; the plugin itself is the hero, then macros, modules, Learn Voice, presets, specs. */
+:root{
+  --bg:#080909;
+  --surface:#131414;
+  --surface-2:#161717;
+  --line:rgba(241,241,234,.08);
+  --line-2:rgba(241,241,234,.15);
+  --fg:#f1f1ea;
+  --fg-2:#a2aaa8;
+  --fg-3:#727b79;
+  --accent:#d3ff19;
+  --accent-ink:#0d1004;
+  --accent-dim:rgba(211,255,25,.12);
+  --display:"Sora",ui-sans-serif,system-ui,sans-serif;
+  --sans:"IBM Plex Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --serif:"Instrument Serif",Georgia,serif;
+  --r:18px;
+  --wrap:1240px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+::selection{background:var(--accent);color:var(--accent-ink)}
+a{color:inherit;text-decoration:none}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+#ribbons{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+main,header,footer{position:relative;z-index:1}
+.wrap{max-width:var(--wrap);margin-inline:auto;padding-inline:clamp(16px,4vw,40px)}
+.mono{font-family:var(--mono);font-size:12px;letter-spacing:.03em}
+.serif{font-family:var(--serif);font-style:italic;font-weight:400;letter-spacing:-.01em}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* nav */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);background:rgba(8,9,9,.72);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:22px;height:64px}
+.brand{display:flex;align-items:center;gap:12px;white-space:nowrap}
+.brand svg{width:26px;height:26px;flex:none}
+.brand b{font-family:var(--display);font-weight:300;letter-spacing:.34em;font-size:14px}
+.nav-links{display:flex;gap:24px;margin-inline:auto;font-size:14px;color:var(--fg-2)}
+.nav-links a:hover{color:var(--fg)}
+.status{display:flex;align-items:center;gap:8px;border:1px solid var(--line-2);border-radius:999px;padding:6px 12px;color:var(--fg-2);white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);flex:none}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:11px 20px;font-size:14px;font-weight:500;border:1px solid transparent;cursor:pointer;white-space:nowrap;transition:transform .2s,background .2s,border-color .2s}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-ghost{background:rgba(255,255,255,.04);border-color:var(--line-2)}
+.btn-ghost:hover{border-color:var(--fg-3)}
+.btn-sm{padding:8px 15px;font-size:13px}
+
+/* shared */
+section{padding-block:clamp(80px,11vw,150px)}
+.tag{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-2);border-radius:999px;padding:4px 11px;color:var(--fg-2);margin-bottom:18px}
+.tag .dot{width:5px;height:5px;box-shadow:none}
+h1,h2,h3{margin:0;font-family:var(--display);font-weight:400;letter-spacing:-.03em;text-wrap:balance}
+h2{font-size:clamp(32px,4.4vw,54px);line-height:1.05}
+h2 .serif,h1 .serif{font-size:1.12em}
+h3{font-size:22px;line-height:1.2;letter-spacing:-.02em}
+.head{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px 64px;align-items:end;margin-bottom:clamp(36px,5vw,56px)}
+.head p{margin:0;color:var(--fg-2);max-width:46ch}
+.card{background:linear-gradient(180deg,rgba(22,23,23,.9),rgba(19,20,20,.9));border:1px solid var(--line);border-radius:var(--r)}
+
+/* hero */
+.hero{padding-block:clamp(48px,7vw,96px) 40px;text-align:center}
+.hero h1{font-size:clamp(46px,8vw,104px);line-height:.95;letter-spacing:-.045em;font-weight:300}
+.hero h1 .serif{font-size:1.1em;letter-spacing:-.02em}
+.hero .lede{font-size:clamp(16px,1.6vw,19px);color:var(--fg-2);max-width:60ch;margin:26px auto 30px}
+.ctas{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.fine{margin-top:18px;color:var(--fg-3)}
+
+/* plugin rig */
+.rig-sec{padding-block:10px clamp(70px,9vw,120px)}
+.rig-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.rig-bar .mono{color:var(--fg-3)}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;max-width:100%}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--line-2);background:rgba(255,255,255,.02);border-radius:999px;padding:6px 13px;font-family:var(--mono);font-size:12px;color:var(--fg-2);cursor:pointer;white-space:nowrap}
+.chip:hover{color:var(--fg)}
+.chip[aria-pressed="true"]{border-color:rgba(211,255,25,.55);color:var(--accent);background:var(--accent-dim)}
+.rig-persp{perspective:1800px}
+.rig{position:relative;width:100%;max-width:1280px;margin-inline:auto;aspect-ratio:1280/800;border-radius:16px;overflow:hidden;border:1px solid var(--line-2);background:#080909;box-shadow:0 60px 120px -40px rgba(0,0,0,.9),0 0 0 1px rgba(211,255,25,.04),0 0 140px -60px rgba(211,255,25,.35);transform-origin:50% 0;will-change:transform}
+.stage{position:absolute;left:0;top:0;width:1280px;height:800px;transform-origin:0 0;font-family:var(--sans);user-select:none;-webkit-user-select:none}
+.scr{position:absolute;inset:0;width:1280px;height:800px;opacity:0;transition:opacity .22s ease}
+.scr.on{opacity:1}
+.ov{position:absolute;inset:0;display:none}
+.ov.on{display:block}
+.hot{position:absolute;background:transparent;border:0;padding:0;cursor:pointer;border-radius:4px;transition:box-shadow .15s,background .15s}
+.hot:hover{box-shadow:inset 0 0 0 1px rgba(211,255,25,.45);background:rgba(211,255,25,.04)}
+.tg{position:absolute;display:grid;place-items:center;padding:0;font:500 13px/1 var(--sans);background:#0c0e0f;border:1px solid #2a2e30;color:#f1f1ea;border-radius:3px;cursor:pointer;white-space:nowrap}
+.tg:hover{background:#181a1b}
+.tg:active{background:#090a0b}
+.tg.sel{background:#181e08;border-color:#c6df1a;color:#d3ff19}
+.box{position:absolute;display:grid;place-items:center;font:500 13px/1 var(--sans);background:#0c0e0f;border:1px solid #2a2e30;color:#f1f1ea;border-radius:3px;pointer-events:none}
+.ak{position:absolute;width:232px;height:240px;transform-origin:0 0;pointer-events:none}
+.ak img,.ak svg{position:absolute;inset:0;width:232px;height:240px;pointer-events:none;-webkit-user-drag:none}
+.ak .v{position:absolute;left:0;right:0;top:120px;transform:translateY(-50%);text-align:center;font:500 30px/1 var(--sans);color:#f1f1ea;pointer-events:none;letter-spacing:-.01em}
+.ak .hit{position:absolute;left:26px;top:30px;width:180px;height:180px;border-radius:50%;pointer-events:auto;touch-action:none;cursor:ns-resize}
+.ak:focus-visible{outline:none}
+.ak:focus-visible .hit{box-shadow:0 0 0 3px rgba(211,255,25,.6)}
+.pulse{position:absolute;width:8px;height:8px;border-radius:50%;background:#d3ff19;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+.toast{position:absolute;left:50%;bottom:62px;transform:translateX(-50%);background:rgba(13,14,14,.95);border:1px solid #2a2e30;color:#a2aaa8;font:500 12px/1 var(--mono);padding:8px 14px;border-radius:6px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap}
+.toast.on{opacity:1}
+.rig-note{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px;color:var(--fg-3)}
+
+/* macros */
+.macros{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.macro{padding:clamp(22px,3vw,36px);display:grid;justify-items:center;text-align:center;gap:6px}
+.mk{position:relative;width:min(100%,300px);aspect-ratio:232/240;touch-action:none;cursor:ns-resize}
+.mk .ak{left:0;top:0}
+.mname{font-family:var(--display);font-weight:300;letter-spacing:.34em;font-size:clamp(18px,2vw,24px);margin-top:10px}
+.zones{display:flex;gap:10px;font-family:var(--mono);font-size:12px;letter-spacing:.14em;color:var(--fg-3)}
+.zones .on{color:var(--accent)}
+.macro p{color:var(--fg-2);margin:14px 0 0;max-width:40ch}
+.styles{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:22px}
+.hint{color:var(--fg-3);text-align:center;margin-top:16px}
+
+/* modules */
+.rackstrip{display:flex;gap:8px;flex-wrap:wrap;padding:14px;margin-bottom:18px;align-items:center}
+.rackstrip .lbl{color:var(--fg-3);margin-right:6px}
+.rs{display:flex;gap:8px;flex-wrap:wrap;flex:1;min-width:0}
+.rsi{display:flex;align-items:center;gap:8px;border:1px solid var(--line-2);border-radius:10px;padding:8px 12px;background:linear-gradient(#161717,#131414);cursor:grab;font-family:var(--mono);font-size:12px;letter-spacing:.08em;touch-action:none}
+.rsi:active{cursor:grabbing}
+.rsi .grip{color:var(--fg-3);letter-spacing:0}
+.rsi .led{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.rsi.ghost{opacity:.35}
+.rsi.chosen{border-color:rgba(211,255,25,.6)}
+.order{color:var(--fg-3);width:100%;margin-top:6px}
+.mods{display:grid;grid-template-columns:minmax(0,.62fr) minmax(0,1.38fr);gap:18px}
+.mlist{padding:10px;display:grid;gap:4px;align-content:start}
+.mbtn{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;text-align:left;padding:12px 14px;border-radius:12px;border:1px solid transparent;background:transparent;cursor:pointer}
+.mbtn:hover{background:rgba(255,255,255,.03)}
+.mbtn[aria-selected="true"]{border-color:rgba(211,255,25,.45);background:var(--accent-dim)}
+.mbtn .n{font-family:var(--mono);font-size:11px;color:var(--fg-3)}
+.mbtn b{font-family:var(--display);font-weight:400;letter-spacing:.18em;font-size:14px}
+.mbtn span.s{display:block;font-family:var(--mono);font-size:10.5px;color:var(--fg-3);letter-spacing:.06em;margin-top:2px}
+.mbtn .m{font-family:var(--mono);font-size:10.5px;color:var(--fg-2);text-transform:uppercase}
+.mbtn[aria-selected="true"] .m{color:var(--accent)}
+.mdetail{padding:14px;min-width:0}
+.mdetail img{display:block;width:100%;height:auto;border-radius:10px;border:1px solid var(--line)}
+.mbody{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px 28px;padding:20px 8px 8px}
+.mbody h3{font-family:var(--display);font-weight:300;letter-spacing:.3em;font-size:24px}
+.mbody .sub{color:var(--fg-3);margin-top:6px;display:block}
+.mbody p{color:var(--fg-2);margin:12px 0 0}
+.kv{display:grid;gap:10px;align-content:start}
+.kv div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding-bottom:9px;font-size:14.5px;color:var(--fg-2)}
+.kv div .mono{color:var(--fg);text-align:right}
+.mbody .btn{margin-top:18px}
+
+/* manifesto */
+.manifesto{height:230vh;padding:0;position:relative}
+.manifesto .stick{position:sticky;top:0;height:100vh;display:grid;place-items:center;overflow:hidden}
+.mpanel{width:min(1240px,calc(100vw - 32px));height:min(640px,74vh);border-radius:28px;background:var(--accent);color:var(--accent-ink);position:relative;display:grid;place-items:center;overflow:hidden;background-image:radial-gradient(rgba(13,16,4,.13) 1px,transparent 1px);background-size:22px 22px;box-shadow:0 0 140px -30px rgba(211,255,25,.5)}
+.mtext{text-align:center;padding:24px;max-width:940px}
+.mtext .mono{display:block;margin-bottom:20px;opacity:.65}
+.mtext h2{font-size:clamp(30px,5vw,66px);line-height:1.04;font-weight:500;letter-spacing:-.04em}
+.mtext h2 .serif{font-weight:400}
+.mtext .w{transition:opacity .25s}
+.mlogo{position:absolute;left:50%;bottom:9%;width:58px;height:58px;margin-left:-29px;border-radius:16px;background:#080909;display:grid;place-items:center}
+.mlogo svg{width:62%;height:62%}
+
+/* learn */
+.learn{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(28px,5vw,72px);align-items:center}
+.lcopy p{color:var(--fg-2);max-width:44ch;margin:16px 0 0}
+.steps{display:grid;gap:12px;margin:28px 0 26px;padding:0;list-style:none}
+.steps li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;align-items:start;color:var(--fg-2)}
+.steps li b{display:block;color:var(--fg);font-family:var(--mono);font-weight:500;letter-spacing:.14em;font-size:12px}
+.steps .k{width:28px;height:28px;border-radius:50%;border:1px solid var(--line-2);display:grid;place-items:center;font-family:var(--mono);font-size:11px;color:var(--fg-3);transition:all .3s}
+.steps li.on .k{border-color:var(--accent);color:var(--accent-ink);background:var(--accent)}
+.ringcard{padding:clamp(20px,3vw,34px);display:grid;justify-items:center;gap:10px;text-align:center}
+.ringcard .ttl{font-family:var(--display);font-weight:300;letter-spacing:.32em;font-size:clamp(14px,1.6vw,18px)}
+.ringcard .sub{color:var(--fg-3);letter-spacing:.14em}
+.ring{position:relative;width:min(100%,320px);aspect-ratio:1}
+.ring svg{width:100%;height:100%}
+.ring .t{position:absolute;inset:0;display:grid;place-content:center;gap:6px}
+.ring .t b{font-family:var(--sans);font-weight:500;font-size:clamp(36px,5vw,52px);letter-spacing:-.02em}
+.ring .t span{font-family:var(--mono);font-size:11px;letter-spacing:.16em;color:var(--fg-3)}
+.lsteps{display:flex;gap:28px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--fg-3)}
+.lsteps span{display:grid;justify-items:center;gap:6px}
+.lsteps span::before{content:"";width:6px;height:6px;border-radius:50%;background:#303436}
+.lsteps span.on{color:var(--accent)}
+.lsteps span.on::before{background:var(--accent)}
+.disclaim{color:var(--fg-3);font-size:12px;max-width:44ch}
+
+/* presets */
+.presets{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:18px}
+.plist{padding:18px}
+.cats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.prow{display:flex;justify-content:space-between;align-items:center;width:100%;padding:13px 14px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.015);cursor:pointer;margin-bottom:6px;text-align:left;font-family:var(--sans);font-size:15px}
+.prow:hover{border-color:var(--line-2)}
+.prow[aria-pressed="true"]{border-color:rgba(211,255,25,.6);background:var(--accent-dim)}
+.prow .star{color:var(--fg-3)}
+.prow[aria-pressed="true"] .star{color:var(--accent)}
+.pdet{padding:clamp(22px,3vw,34px);display:flex;flex-direction:column}
+.pdet h3{font-family:var(--display);font-weight:300;letter-spacing:.3em;font-size:clamp(22px,2.6vw,30px)}
+.pdet p{color:var(--fg-2);margin:14px 0 0;max-width:48ch}
+.ptags{display:flex;flex-wrap:wrap;gap:6px;margin-top:18px}
+.ptag{border:1px solid var(--line-2);border-radius:6px;padding:5px 12px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--fg-2)}
+.chain{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:22px}
+.cm{border:1px solid var(--line-2);border-radius:8px;padding:10px 2px;text-align:center;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;color:var(--fg-2)}
+.cm i{display:block;width:5px;height:5px;border-radius:50%;background:var(--accent);margin:0 auto 7px}
+.pdet .btn{margin-top:26px;align-self:flex-start}
+
+/* specs */
+.nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(18px,3vw,40px);margin-bottom:clamp(40px,5vw,64px)}
+.num b{display:block;font-family:var(--display);font-weight:300;font-size:clamp(52px,7vw,92px);line-height:1;letter-spacing:-.05em}
+.num span{display:block;color:var(--fg-3);margin-top:10px}
+.num .bar{height:3px;border-radius:3px;background:rgba(255,255,255,.07);margin-top:16px;overflow:hidden}
+.num .bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#a8ed13,#d3ff19,#f1ef13)}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.fact{padding:22px}
+.fact .mono{color:var(--accent);display:block;margin-bottom:10px}
+.fact p{margin:0;color:var(--fg-2);font-size:14.5px}
+.fact h3{font-size:18px;margin-bottom:6px;font-family:var(--sans);font-weight:500;letter-spacing:-.01em}
+.seg{display:inline-flex;border:1px solid #2a2e30;border-radius:4px;overflow:hidden;margin-top:12px}
+.seg span{padding:7px 14px;font:500 12px/1 var(--sans);color:#f1f1ea;border-right:1px solid #2a2e30;background:#0c0e0f}
+.seg span:last-child{border-right:0}
+.seg span.sel{background:#181e08;color:#d3ff19}
+
+/* footer */
+.foot{padding-block:40px 64px}
+.cta{background:var(--accent);color:var(--accent-ink);border-radius:24px;padding:clamp(28px,5vw,64px);display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:28px 48px;align-items:end;position:relative;overflow:hidden}
+.cta .big{position:absolute;right:-30px;top:-30px;width:280px;opacity:.09}
+.cta .mono{opacity:.65}
+.cta h2{font-size:clamp(34px,4.6vw,58px);font-weight:500;margin:12px 0 0;letter-spacing:-.04em}
+.cta p{margin:0 0 18px;opacity:.82;max-width:44ch}
+.signup{display:flex;gap:6px;background:#f6fde0;border-radius:999px;padding:5px}
+.signup input{flex:1;min-width:0;border:0;background:transparent;padding:9px 14px;color:var(--accent-ink);outline:none}
+.signup input::placeholder{color:#6b7158}
+.signup button{background:var(--accent-ink);color:var(--accent);border:0;border-radius:999px;padding:10px 18px;cursor:pointer;font-weight:500;white-space:nowrap}
+.signup-msg{margin-top:10px;font-family:var(--mono);font-size:12px;min-height:1.4em}
+.legal{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;margin-top:28px;color:var(--fg-3)}
+.legal .brand b{font-size:12px}
+
+@media (max-width:1000px){
+  .nav-links{display:none}
+  .nav .status{margin-left:auto}
+  .head,.learn,.presets,.mods,.cta{grid-template-columns:minmax(0,1fr)}
+  .nums{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:640px){
+  .nav .status{display:none}
+  .nav .btn{margin-left:auto}
+  .brand b{letter-spacing:.24em;font-size:12px}
+  .macros,.facts,.mbody{grid-template-columns:minmax(0,1fr)}
+  .chain{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .manifesto{height:190vh}
+  .rig{border-radius:10px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .pulse{animation:none}
+  .manifesto{height:auto}
+  .manifesto .stick{position:relative;height:auto;padding-block:80px}
+}
+
+/* ===== plugin-matched system (from v2__control_* SVGs, SharedDepth tokens) ===== */
+:root{--c-edge:#2a2e30;--c-hi:#363b3d;--c-sel-edge:#c6df1a;--c-sel-hi:#596b22;--deck-top:#141515;--deck-bot:#101111;--card-top:#161717;--card-bot:#131414;--recess:#070808;--nav-top:#0c0d0d;--div:#202324}
+.btn{position:relative;border-radius:4px;padding:13px 22px;font:500 13px/1 var(--sans);letter-spacing:.07em;text-transform:uppercase;border:1px solid var(--c-edge);background:linear-gradient(#0a0c0d,#0c0e0f 48%,#0a0c0d);color:var(--fg);transition:background .15s,box-shadow .15s}
+.btn::before{content:"";position:absolute;left:6px;right:6px;top:2px;height:1px;background:var(--c-hi);opacity:.7;pointer-events:none}
+.btn:hover{transform:none;box-shadow:inset 0 0 0 100vmax rgba(255,255,255,.05)}
+.btn:active{box-shadow:inset 0 0 0 100vmax rgba(0,0,0,.25)}
+.btn-primary{background:linear-gradient(#222a0d,#171d08 48%,#222a0d);border-color:var(--c-sel-edge);color:var(--accent)}
+.btn-primary::before{background:var(--c-sel-hi)}
+.btn-ghost{border-color:var(--c-edge)}
+.btn-sm{padding:10px 16px;font-size:12px}
+.btn .ico{width:16px;height:16px;flex:none}
+.chip,.prow{border-radius:4px!important;border:1px solid var(--c-edge)!important;background:linear-gradient(#0a0c0d,#0c0e0f 48%,#0a0c0d)!important;font-family:var(--sans)!important;font-weight:500;color:var(--fg)!important}
+.chip{font-size:12px;letter-spacing:.07em;text-transform:uppercase;padding:8px 14px}
+.chip:hover,.prow:hover{box-shadow:inset 0 0 0 100vmax rgba(255,255,255,.05)}
+.chip[aria-pressed="true"],.prow[aria-pressed="true"]{background:linear-gradient(#222a0d,#171d08 48%,#222a0d)!important;border-color:var(--c-sel-edge)!important;color:var(--accent)!important}
+.tag{border:0;padding:0;border-radius:0;font-family:var(--sans);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--fg-2)}
+.tag .dot{width:5px;height:5px;background:var(--fg-3)}
+.card{border-radius:8px;border-color:var(--div);background:linear-gradient(var(--card-top),var(--card-bot))}
+.rig{border-radius:10px;border-color:var(--div)}
+.rsi{border-radius:6px;border-color:var(--div);background:linear-gradient(var(--card-top),var(--card-bot))}
+.rsi .ic,.mbtn .ic{display:inline-block;background:currentColor;-webkit-mask:var(--m) center/contain no-repeat;mask:var(--m) center/contain no-repeat}
+.rsi .ic{width:26px;height:14px;color:var(--fg-2)}
+.rsi .grip{font-size:11px;letter-spacing:-.05em}
+.mbtn{border-radius:6px}
+.mbtn .ic{width:30px;height:18px;color:var(--fg-3)}
+.mbtn[aria-selected="true"]{border-color:rgba(211,255,25,.55);background:linear-gradient(#1a200b,#141909)}
+.mbtn[aria-selected="true"] .ic{color:var(--accent)}
+.cm{border-radius:4px;border-color:var(--div);background:linear-gradient(var(--card-top),var(--card-bot))}
+.ptag{border-radius:4px;border-color:var(--c-edge)}
+.seg{border-radius:4px}
+/* nav as plugin header */
+.nav{background:linear-gradient(var(--nav-top),rgba(8,9,9,.86));border-bottom-color:var(--div)}
+.brand b{letter-spacing:.38em}
+.maker{display:flex;align-items:center;gap:14px;color:var(--fg-2);font:500 11px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;white-space:nowrap}
+.maker::before{content:"";width:1px;height:22px;background:var(--div)}
+.nav-links a{font:500 12px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;padding:22px 2px;border-bottom:2px solid transparent}
+.nav-links a.on{color:var(--accent);border-bottom-color:var(--accent)}
+.status{border-radius:4px;border:1px solid var(--c-sel-edge);background:linear-gradient(#222a0d,#171d08 48%,#222a0d);color:var(--accent);font:500 11px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;padding:7px 10px}
+.status .dot{display:none}
+.navmeter{display:grid;grid-template-columns:auto 60px;gap:4px 6px;align-items:center;font:500 8px/1 var(--sans);color:var(--fg-3)}
+.navmeter svg{width:60px;height:14px;display:block}
+.pwr{width:30px;height:26px;border-radius:4px;border:1px solid var(--c-edge);background:linear-gradient(#0a0c0d,#0c0e0f 48%,#0a0c0d);display:grid;place-items:center;cursor:pointer;padding:0}
+.pwr:hover{box-shadow:inset 0 0 0 100vmax rgba(255,255,255,.05)}
+.pwr svg{width:16px;height:16px}
+/* manifesto as chassis */
+.mpanel{background:linear-gradient(var(--deck-top),var(--deck-bot));color:var(--fg);border:1px solid var(--div);background-image:radial-gradient(rgba(241,241,234,.06) 1px,transparent 1px),linear-gradient(var(--deck-top),var(--deck-bot));background-size:22px 22px,100% 100%;box-shadow:0 40px 120px -40px rgba(0,0,0,.9)}
+.mtext h2 .serif{color:var(--accent)}
+.mtext .mono{color:var(--fg-2);opacity:1;letter-spacing:.2em}
+.mlogo{background:linear-gradient(#222a0d,#171d08 48%,#222a0d);border:1px solid var(--c-sel-edge)}
+/* footer CTA as selected deck */
+.cta{background:linear-gradient(#1d2409,#12170a 60%,#0e1208);color:var(--fg);border:1px solid var(--c-sel-edge);border-radius:12px}
+.cta .big{opacity:.08}
+.cta h2 .serif{color:var(--accent)}
+.cta .mono{color:var(--accent);opacity:1;letter-spacing:.2em;text-transform:uppercase}
+.cta p{color:var(--fg-2);opacity:1}
+.signup{background:var(--recess);border:1px solid var(--c-edge);border-radius:4px;padding:5px}
+.signup input{color:var(--fg)}
+.signup input::placeholder{color:var(--fg-3)}
+.signup .btn{padding:11px 18px}
+.okline{display:flex;gap:8px;align-items:center;color:var(--fg-2);font-size:14px}
+.okline img{width:14px;height:14px}
+.pbar{display:grid;grid-template-columns:34px minmax(0,1fr) 34px;align-items:center;height:38px;border-radius:4px;border:1px solid var(--c-edge);background:var(--recess);margin-bottom:18px}
+.pbar button{height:100%;background:transparent;border:0;cursor:pointer;display:grid;place-items:center}
+.pbar button:hover{background:rgba(255,255,255,.04)}
+.pbar span{text-align:center;font:500 15px/1 var(--sans);color:var(--fg)}
+.pbar svg{width:18px;height:18px}
+.fact .mono{display:flex;align-items:center;gap:8px}
+.fact .mono img{width:14px;height:14px}
+.listen{width:16px;height:16px;vertical-align:-3px;margin-right:6px;opacity:.8}
+.nav-links{gap:22px}.nav-links a{white-space:nowrap}
+.signup .btn{border-radius:4px;border:1px solid var(--c-sel-edge);background:linear-gradient(#222a0d,#171d08 48%,#222a0d);color:var(--accent)}
+@media (max-width:1320px){.navmeter{display:none}}
+@media (max-width:1180px){.maker{display:none}}
+@media (max-width:480px){.signup{flex-wrap:wrap;background:transparent;border:0;padding:0;gap:8px}.signup input{background:var(--recess);border:1px solid var(--c-edge);border-radius:4px;padding:13px 14px;flex-basis:100%}.signup .btn{width:100%;justify-content:center}}
+@media (max-width:640px){.pwr{display:none}}
+
+/* ITMR maker bar (shared family element) */
+.mk-bar{position:relative;z-index:31;background:#10120f;border-bottom:1px solid #23261f}
+.mk-bar .wrap{display:flex;align-items:center;justify-content:space-between;gap:16px;height:46px}
+.mk-bar img{display:block;width:auto}.mk-bar .lg-h{height:29px}.mk-bar .lg-s{height:28px;display:none}
+.mk-links{display:flex;gap:4px;font-family:"Manrope",system-ui,sans-serif;font-size:13px;font-weight:600}
+.mk-links a{padding:6px 10px;color:#b9b8ae;border-radius:2px;white-space:nowrap;text-transform:none;letter-spacing:0}
+.mk-links a:hover{color:#f4f3e9}
+.mk-links a[aria-current="page"]{color:#f4f3e9;box-shadow:inset 0 -2px 0 #d5ff3f}
+.endorse{display:flex;align-items:center;gap:12px}.endorse img{height:29px;width:auto}
+@media (max-width:640px){.mk-links a.hide-s{display:none}.mk-bar .lg-h{display:none}.mk-bar .lg-s{display:block}.mk-links{font-size:12px}}
+</style>
+<link rel="stylesheet" href="assets/itmr.css">
+<link rel="icon" href="assets/brand/itmr-audio-symbol-signal.svg" type="image/svg+xml">
+</head>
+<body style="margin:0">
+
+
+<canvas id="ribbons" aria-hidden="true"></canvas>
+
+<header class="itmr-bar"><div class="w">
+<a href="index.html" aria-label="ITMR Audio home"><img src="assets/brand/itmr-audio-horizontal-paper.svg" alt="ITMR Audio" width="180" height="29"></a>
+<nav aria-label="ITMR Audio"><a href="arc-vox.html" aria-current="page">Arc Vox</a><a href="arc-fx.html">Arc Fx</a><a class="hs" href="index.html">All plugins</a></nav>
+<a class="ea" href="#signup">Early access</a>
+</div></header>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Arc Vox home">
+      <svg viewBox="0 0 47 46" aria-hidden="true"><use href="#arcmark"/></svg><b>THE ARC VOX</b>
+    </a>
+    <nav class="nav-links" aria-label="Main">
+      <a href="#macros">Macros</a>
+      <a href="#modules">Modules</a>
+      <a href="#learn">Learn</a>
+      <a href="#presets">Presets</a>
+      <a href="#specs">Specs</a>
+    </nav>
+    <span class="navmeter" aria-hidden="true" title="page position"><span>L</span><svg viewBox="0 0 60 14" id="nm"><path d="M0 0H60V5H0Z M0 9H60V14H0Z" fill="#252A2B"/><defs><linearGradient id="nmg"><stop stop-color="#94D319"/><stop offset="1" stop-color="#D3FF19"/></linearGradient><clipPath id="nmc"><rect id="nmr" width="0" height="14"/></clipPath></defs><g clip-path="url(#nmc)"><rect width="60" height="5" fill="url(#nmg)"/><rect y="9" width="60" height="5" fill="url(#nmg)"/></g><path id="nmp" d="M0 0V5M0 9V14" stroke="#F1F1EA" stroke-width="1"/><path id="nmclip" d="M59.5 0V14" stroke="#FF9A49" stroke-width="1" opacity="0"/></svg><span>R</span><span></span></span>
+    <span class="status">launching soon</span>
+    <button class="pwr" type="button" id="pwr" aria-pressed="true" title="Background motion on/off" aria-label="Background motion"><svg viewBox="0 0 20 20"><path id="pwrp" d="M10 2 V10 M5.1 4.6 A7.1 7.1 0 1 0 14.9 4.6" fill="none" stroke="#D8F23C" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <a class="btn btn-primary btn-sm" href="#signup">Get early access</a>
+  </div>
+</header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="amg1" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#E4E8E9"/><stop offset="1" stop-color="#8A9398"/></linearGradient>
+    <linearGradient id="amg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E4E8E9"/><stop offset="1" stop-color="#D8F23C"/></linearGradient>
+    <symbol id="arcmark" viewBox="0 0 47 46"><path d="M5.78 43.68V19.32C5.78 3.08 22.02-1.56 30.14 12.36C34.78 20.48 34.78 25.12 41.74 32.08C49.86 44.84 37.1 51.8 26.66 39.04C17.38 25.12 6.94 21.64 5.78 29.76" fill="none" stroke="url(#amg1)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.78 30.9L5.781 43.68" fill="none" stroke="url(#amg2)" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="arcmark-lime" viewBox="0 0 47 46"><path d="M5.78 43.68V19.32C5.78 3.08 22.02-1.56 30.14 12.36C34.78 20.48 34.78 25.12 41.74 32.08C49.86 44.84 37.1 51.8 26.66 39.04C17.38 25.12 6.94 21.64 5.78 29.76" fill="none" stroke="#d3ff19" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.78 30.9L5.781 43.68" fill="none" stroke="#d3ff19" stroke-width="3.2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <span class="tag mono"><span class="dot"></span>intelligent vocal engine · by ITMR Audio</span>
+      <h1>Keep your head on the <span class="serif">song</span>.</h1>
+      <p class="lede">Arc Vox is for the artist who knows how the vocal should feel but doesn’t want to play engineer to get there. Learn Voice builds a starting point from your performance, while CONTROL and CHARACTER let you steer the result. The chain handles cleanup, tuning, de-essing, compression, tone, color, and space. Open the rack when you want to make the decisions yourself.</p>
+      <div class="ctas">
+        <a class="btn btn-primary" href="#signup">Get early access</a>
+        <a class="btn btn-ghost" href="#try">▸ Try the vocal chain</a>
+      </div>
+      <div class="fine mono">launching soon · VST3</div>
+    </div>
+  </section>
+
+  <section class="liftD" id="tour" style="height:460vh;--stick:64px;--dot:#d3ff19" aria-label="THE ARC VOX, view by view">
+<div class="stageD">
+<div class="layerD" style="--fc:#d3ff19">
+<div class="frD" style="background:#0a0c0c">
+<div class="lh"><div><div class="k">Voice view</div><div class="t">Shape the vocal, not the <i>setup</i>.</div></div><p>CONTROL steers where the vocal sits. CHARACTER steers how it feels.</p></div>
+<div class="live" data-live="vox-voice"><img src="assets/vox/01-voice.webp" alt="THE ARC VOX voice view" loading="lazy"><canvas></canvas></div>
+</div>
+</div>
+<div class="layerD" style="--fc:#d3ff19;opacity:0">
+<div class="frD" style="background:#0a0c0c">
+<div class="lh"><div><div class="k">Rack</div><div class="t">One chain. Every decision is still <i>yours</i>.</div></div><p>Clean, Tune, De-ess, Comp, Tone, Color, and Space. Drag the order and the signal follows.</p></div>
+<div class="live" data-live="vox-rack"><img src="assets/vox/02-rack.webp" alt="THE ARC VOX rack: seven module cards" loading="lazy"><canvas></canvas></div>
+</div>
+</div>
+<div class="layerD" style="--fc:#d3ff19;opacity:0">
+<div class="frD" style="background:#0a0c0c">
+<div class="lh"><div><div class="k">Advance · Comp</div><div class="t">Open only the part you want to <i>change</i>.</div></div><p>See the input against gain reduction, then set the amount and feel without leaving the chain.</p></div>
+<div class="live" data-live="vox-comp"><img src="assets/vox/03-advance-comp.webp" alt="THE ARC VOX advance view, COMP module open" loading="lazy"><canvas></canvas></div>
+</div>
+</div>
+<div class="layerD txt" style="--fc:#d3ff19;opacity:0">
+<div class="kD">[ Your turn ]</div>
+<div class="bigD">Now <i>play</i> it yourself.</div>
+<p class="subD">Use the working interface below. Move a macro, open a module, or load a different starting point.</p>
+<a class="frD" href="#try" style="--fc:#d3ff19;display:inline-block;padding:12px 28px;font-weight:600;color:#f4f3e9">Try Arc Vox ↓</a>
+</div>
+<div class="dotsD" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+</div>
+</section>
+<div class="wrap"><div class="demo-tag"><span>Analyzers and meters run on a demo signal.</span><span>Real renders through the plugin are coming.</span></div></div>
+
+  <section class="rig-sec" id="try" aria-label="Interactive ARC VOX interface">
+    <div class="wrap">
+      <div class="rig-bar">
+        <div class="chips" id="chips" role="toolbar" aria-label="Plugin screens"></div>
+        <span class="mono">live interface · drag any knob · click tabs, modules, presets</span>
+      </div>
+      <div class="rig-persp">
+        <div class="rig" id="rig">
+          <div class="stage" id="stage"></div>
+        </div>
+      </div>
+      <div class="rig-note mono"><span>Real ARC VOX interface, rendered idle. Graphs and meters wait for audio, just like the plugin.</span><span id="rigState">voice</span></div>
+    </div>
+  </section>
+
+  <section id="macros" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <div><span class="tag mono"><span class="dot"></span>voice view</span>
+        <h2>Steer the result without rebuilding the <span class="serif">chain</span>.</h2></div>
+        <p>CONTROL and CHARACTER move the full chain together. Turn either one here and the plugin view above follows.</p>
+      </div>
+      <div class="macros">
+        <div class="card macro">
+          <div class="mk" id="bigControl"></div>
+          <div class="mname">CONTROL</div>
+          <div class="zones" id="zc"><span>EVEN</span><span>/</span><span>CLEAR</span><span>/</span><span>FORWARD</span></div>
+          <p>Choose how the vocal sits: controlled and even, clear and present, or pushed to the front.</p>
+        </div>
+        <div class="card macro">
+          <div class="mk" id="bigCharacter"></div>
+          <div class="mname">CHARACTER</div>
+          <div class="zones" id="zh"><span>NATURAL</span><span>/</span><span>WARM</span><span>/</span><span>PRESENT</span></div>
+          <p>Choose how the vocal feels: natural, warmer and denser, or more present and produced.</p>
+        </div>
+      </div>
+      <div class="hint mono">drag up or down · scroll wheel · arrow keys · double-click to reset</div>
+    </div>
+  </section>
+
+  <section id="modules" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <div><span class="tag mono"><span class="dot"></span>rack + advance</span>
+        <h2>The full chain, in the order <span class="serif">you</span> want.</h2></div>
+        <p>Drag the seven modules into place. Open any one for its own controls, modes, and visual feedback.</p>
+      </div>
+      <div class="card rackstrip">
+        <span class="mono lbl">rack</span>
+        <div class="rs" id="rs"></div>
+        <div class="order mono" id="order"></div>
+      </div>
+      <div class="mods">
+        <div class="card mlist" id="mlist" role="tablist" aria-label="Modules"></div>
+        <div class="card mdetail" id="mdetail"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="manifesto" id="manifesto" aria-label="What ARC VOX is for">
+    <div class="stick">
+      <div class="mpanel" id="mpanel">
+        <div class="mtext" id="mtext">
+          <span class="mono">[ stay on the song ]</span>
+          <h2 id="mline">The point isn’t less control. It’s less time away from the <span class="serif">performance.</span></h2>
+        </div>
+        <div class="mlogo" id="mlogo"><svg viewBox="0 0 47 46"><use href="#arcmark-lime"/></svg></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="learn" style="padding-top:0">
+    <div class="wrap learn">
+      <div class="lcopy">
+        <span class="tag mono"><span class="dot"></span>learn voice</span>
+        <h2>Build the starting point from <span class="serif">your performance</span>.</h2>
+        <p>Play a quiet line and a loud one. Learn Voice listens for 12 seconds, reads your range and dynamics, and sets the chain from that performance instead of dropping in a generic preset.</p>
+        <ul class="steps" id="steps">
+          <li data-s="0"><span class="k">1</span><span><b>LISTEN</b>Play your softest and loudest lines.</span></li>
+          <li data-s="1"><span class="k">2</span><span><b>ANALYZE</b>ARC VOX reads the 12-second capture.</span></li>
+          <li data-s="2"><span class="k">3</span><span><b>READY</b>Your chain starts from your range.</span></li>
+        </ul>
+        <button class="btn btn-ghost" type="button" id="runLearn">▸ Run the capture timer</button>
+      </div>
+      <div class="card ringcard">
+        <div class="ttl">LEARN YOUR VOICE</div>
+        <div class="mono sub">PLAY YOUR SOFTEST AND LOUDEST LINES</div>
+        <div class="ring">
+          <svg viewBox="0 0 280 280" aria-hidden="true">
+            <defs><linearGradient id="lrg" x1="0" x2="1"><stop offset="0" stop-color="#A8ED13"/><stop offset=".5" stop-color="#D3FF19"/><stop offset="1" stop-color="#F1EF13"/></linearGradient></defs>
+            <path d="M 46.66 233.34 A132 132 0 1 1 233.34 233.34" fill="none" stroke="#303436" stroke-width="8"/>
+            <path id="lact" d="M 46.66 233.34 A132 132 0 1 1 233.34 233.34" pathLength="100" fill="none" stroke="url(#lrg)" stroke-width="8" stroke-dasharray="0 100"/>
+          </svg>
+          <div class="t"><b class="tnum" id="lsec">0.0 s</b><span id="lstate">WAITING FOR AUDIO</span><span>12 SECOND CAPTURE</span></div>
+        </div>
+        <div class="lsteps" id="lsteps"><span class="on">LISTEN</span><span>ANALYZE</span><span>READY</span></div>
+        <p class="disclaim">This runs the capture timer only. Nothing is recorded or analyzed on this page.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="presets" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <div><span class="tag mono"><span class="dot"></span>presets</span>
+        <h2>Start close. Finish it your <span class="serif">way</span>.</h2></div>
+        <p>Vocal styles load the full seven-module chain. Pick the nearest direction, then use CONTROL, CHARACTER, or the rack to finish the sound.</p>
+      </div>
+      <div class="presets">
+        <div class="card plist">
+          <div class="cats mono" id="cats"></div>
+          <div id="prows"></div>
+        </div>
+        <div class="card pdet" id="pdet"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="specs" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <div><span class="tag mono"><span class="dot"></span>specs</span>
+        <h2>What Arc Vox actually <span class="serif">does</span>.</h2></div>
+        <p>The details below come from the plugin itself—no vague claims and no rounded-up specs.</p>
+      </div>
+      <div class="nums" id="nums">
+        <div class="num"><b class="tnum" data-to="2">2</b><span class="mono">macro knobs</span><div class="bar"><i></i></div></div>
+        <div class="num"><b class="tnum" data-to="7">7</b><span class="mono">modules in the rack</span><div class="bar"><i></i></div></div>
+        <div class="num"><b class="tnum" data-to="6">6</b><span class="mono">parametric EQ bands</span><div class="bar"><i></i></div></div>
+        <div class="num"><b class="tnum" data-to="27.7" data-dec="1">27.7</b><span class="mono">ms total latency in Mix</span><div class="bar"><i></i></div></div>
+      </div>
+      <div class="facts">
+        <div class="card fact"><span class="mono"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2Ij48dGl0bGU+Y2hlY2tfb248L3RpdGxlPjxyZWN0IHg9IjAuNyIgeT0iMC43IiB3aWR0aD0iMTQuNiIgaGVpZ2h0PSIxNC42IiByeD0iMi44IiBmaWxsPSIjRDNGRjE5IiBzdHJva2U9IiNEM0ZGMTkiIHN0cm9rZS13aWR0aD0iMC43IiAvPjxwYXRoIGQ9Ik00IDggTDcgMTEgTDEyIDUiIHN0cm9rZT0iIzE3MjEwMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiIC8+PC9zdmc+DQo=" alt="">quality</span><h3>Three quality modes</h3><p>Switch between Track, Mix and Studio from the footer. Total latency is always shown next to them.</p><div class="seg"><span>TRACK</span><span class="sel">MIX</span><span>STUDIO</span></div></div>
+        <div class="card fact"><span class="mono"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2Ij48dGl0bGU+Y2hlY2tfb248L3RpdGxlPjxyZWN0IHg9IjAuNyIgeT0iMC43IiB3aWR0aD0iMTQuNiIgaGVpZ2h0PSIxNC42IiByeD0iMi44IiBmaWxsPSIjRDNGRjE5IiBzdHJva2U9IiNEM0ZGMTkiIHN0cm9rZS13aWR0aD0iMC43IiAvPjxwYXRoIGQ9Ik00IDggTDcgMTEgTDEyIDUiIHN0cm9rZT0iIzE3MjEwMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiIC8+PC9zdmc+DQo=" alt="">compare</span><h3>A/B and audition</h3><p>Two settings slots, plus Original against Processed, so you always know what the chain is doing.</p><div class="seg"><span class="sel">A</span><span>B</span></div></div>
+        <div class="card fact"><span class="mono"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2Ij48dGl0bGU+Y2hlY2tfb248L3RpdGxlPjxyZWN0IHg9IjAuNyIgeT0iMC43IiB3aWR0aD0iMTQuNiIgaGVpZ2h0PSIxNC42IiByeD0iMi44IiBmaWxsPSIjRDNGRjE5IiBzdHJva2U9IiNEM0ZGMTkiIHN0cm9rZS13aWR0aD0iMC43IiAvPjxwYXRoIGQ9Ik00IDggTDcgMTEgTDEyIDUiIHN0cm9rZT0iIzE3MjEwMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiIC8+PC9zdmc+DQo=" alt="">gain</span><h3>Auto LVL</h3><p>Level matching in the header keeps comparisons honest, so louder never fools you into thinking it's better.</p><div class="seg"><span class="sel">AUTO LVL</span></div></div>
+        <div class="card fact"><span class="mono"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2Ij48dGl0bGU+Y2hlY2tfb248L3RpdGxlPjxyZWN0IHg9IjAuNyIgeT0iMC43IiB3aWR0aD0iMTQuNiIgaGVpZ2h0PSIxNC42IiByeD0iMi44IiBmaWxsPSIjRDNGRjE5IiBzdHJva2U9IiNEM0ZGMTkiIHN0cm9rZS13aWR0aD0iMC43IiAvPjxwYXRoIGQ9Ik00IDggTDcgMTEgTDEyIDUiIHN0cm9rZT0iIzE3MjEwMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiIC8+PC9zdmc+DQo=" alt="">tone</span><h3>Six-band parametric EQ</h3><p>A full EQ with ±18 dB range inside the chain. Use the mouse wheel for Q, Shift for fine moves and right-click for band controls.</p></div>
+        <div class="card fact"><span class="mono"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2Ij48dGl0bGU+Y2hlY2tfb248L3RpdGxlPjxyZWN0IHg9IjAuNyIgeT0iMC43IiB3aWR0aD0iMTQuNiIgaGVpZ2h0PSIxNC42IiByeD0iMi44IiBmaWxsPSIjRDNGRjE5IiBzdHJva2U9IiNEM0ZGMTkiIHN0cm9rZS13aWR0aD0iMC43IiAvPjxwYXRoIGQ9Ik00IDggTDcgMTEgTDEyIDUiIHN0cm9rZT0iIzE3MjEwMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiIC8+PC9zdmc+DQo=" alt="">tune</span><h3>Key or chromatic</h3><p>Correction and Speed with Natural, Modern and Hard modes, locked to a key or fully chromatic.</p></div>
+        <div class="card fact"><span class="mono"><img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgdmlld0JveD0iMCAwIDE2IDE2Ij48dGl0bGU+Y2hlY2tfb248L3RpdGxlPjxyZWN0IHg9IjAuNyIgeT0iMC43IiB3aWR0aD0iMTQuNiIgaGVpZ2h0PSIxNC42IiByeD0iMi44IiBmaWxsPSIjRDNGRjE5IiBzdHJva2U9IiNEM0ZGMTkiIHN0cm9rZS13aWR0aD0iMC43IiAvPjxwYXRoIGQ9Ik00IDggTDcgMTEgTDEyIDUiIHN0cm9rZT0iIzE3MjEwMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiIC8+PC9zdmc+DQo=" alt="">interface</span><h3>Scales to your screen</h3><p>UI scale at 100, 125 or 150 percent, with a 30 FPS meter refresh. Scaling changes the view, never the sound.</p><div class="seg"><span>100%</span><span class="sel">125%</span><span>150%</span></div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot" id="signup">
+  <div class="wrap">
+    <div class="cta">
+      <svg class="big" viewBox="0 0 47 46" aria-hidden="true"><path d="M5.78 43.68V19.32C5.78 3.08 22.02-1.56 30.14 12.36C34.78 20.48 34.78 25.12 41.74 32.08C49.86 44.84 37.1 51.8 26.66 39.04C17.38 25.12 6.94 21.64 5.78 29.76" fill="none" stroke="#d3ff19" stroke-width="3" stroke-linecap="round"/></svg>
+      <div>
+        <span class="mono">early access</span>
+        <h2>Put Arc Vox on the next <span class="serif">vocal</span>.</h2>
+      </div>
+      <div>
+        <p>Join for early builds, release news, and launch pricing.</p>
+        <form class="signup" id="form" novalidate>
+          <label for="email" style="position:absolute;left:-9999px">Email</label>
+          <input id="email" type="email" placeholder="you@studio.com" autocomplete="email" required>
+          <button class="btn btn-primary" type="submit">Get early access</button>
+        </form>
+        <div class="signup-msg" id="formMsg"></div>
+      </div>
+    </div>
+    <div class="legal mono">
+      <a class="brand" href="#top"><svg viewBox="0 0 47 46" aria-hidden="true"><use href="#arcmark"/></svg><b>THE ARC VOX</b></a>
+      <span class="endorse">Arc Vox is made by <a href="index.html"><img src="assets/brand/itmr-audio-horizontal-signal.svg" alt="ITMR Audio" width="180" height="29"></a></span>
+      <span>© 2026 ITMR Audio · VST is a trademark of Steinberg Media Technologies GmbH</span>
+    </div>
+  </div>
+</footer>
+<footer class="itmr-foot"><div class="w">
+<a href="index.html"><img src="assets/brand/itmr-audio-horizontal-paper.svg" alt="ITMR Audio" width="162" height="26"></a>
+<nav aria-label="ITMR Audio"><a href="arc-vox.html">Arc Vox</a><a href="arc-fx.html">Arc Fx</a><a href="index.html">All plugins</a></nav>
+<span>© 2026 ITMR Audio · itmraudio.com</span>
+</div></footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script>
+(()=>{
+const IMG={"01-housing": "assets/vox/01-housing.webp", "01-voice": "assets/vox/01-voice.webp", "02-rack": "assets/vox/02-rack.webp", "02-ticks": "assets/vox/02-ticks.webp", "03-advance-clean": "assets/vox/03-advance-clean.webp", "03-advance-color": "assets/vox/03-advance-color.webp", "03-advance-comp": "assets/vox/03-advance-comp.webp", "03-advance-deess": "assets/vox/03-advance-deess.webp", "03-advance-space": "assets/vox/03-advance-space.webp", "03-advance-tone": "assets/vox/03-advance-tone.webp", "03-advance-tune": "assets/vox/03-advance-tune.webp", "04-learn-waiting": "assets/vox/04-learn-waiting.webp", "05-presets": "assets/vox/05-presets.webp", "06-cap-stationary": "assets/vox/06-cap-stationary.webp", "06-settings": "assets/vox/06-settings.webp", "panel-clean": "assets/vox/panel-clean.webp", "panel-color": "assets/vox/panel-color.webp", "panel-comp": "assets/vox/panel-comp.webp", "panel-deess": "assets/vox/panel-deess.webp", "panel-space": "assets/vox/panel-space.webp", "panel-tone": "assets/vox/panel-tone.webp", "panel-tune": "assets/vox/panel-tune.webp", "primary-lime-track": "assets/vox/primary-lime-track.webp", "ic-clean": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEYAAAAYCAYAAABHqosDAAABuUlEQVR42t2ZO0sDQRSFP0GxCaRLJRKwDkJQRJBAOnsR/QWCRGMl2AXEJqUPLPwDFiJBSCH2qUQF61goksLOlBE5NrOwDkp21yU744ELm9m9jzlzJzv37pgk/glmgLy5fgee/mJs3GMiJoE6sAKUgQnr/gdwD1wAR+Z3ZIx5mDEF4BBYj6HzaQjaAd7+IzHHwJY19gpcA7ehSReAeWAZmLKePwG2h3qS5IPMSurqO9qSqhF0q+bZMLrG5q96PpCyJ2kQmtSdpLkEdhaMboCBpF1fibmyVno/BZsHls2WT8TkrNXtDUv9BFuzZ2VhznViipKeQ0F37KBTJL8T8vMsadpVYkqS+sPSPGVphfz1TQxOEbNk7f3mCH03Ld+LwY2GpNUMSVmz3jz1DGKoh/zXkFQLD2Qc0MCQlOUCNYKt5FQKu7K1nfvTc42YrF+TRdeODfZAXtKDdbAqjfJg5SoxgbRHcBRvu1yOxCneHiWVEzgpG91IxZsPxAST+qncr0QwXklS7rsiURtVp8CmNfYC3KTeIHIFMVgsSDpXfJwbXXySJK3NPLARoQl9CZyZjr13SKPnm+pnC1fwBUhIpLmRTMOCAAAAAElFTkSuQmCC", "ic-tune": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEYAAAAYCAYAAABHqosDAAACCUlEQVR42s2ZQUtbQRCAPwNtvRRaiQdF6iH2D+ihl4JIQApC/4HgTYK9ScVL0VOh4A8ohEJ+QnOxBCF6qT/BU3toBBVatAakrR6ml0GGkJe897L7dgcCu29ndr/s252Z3TcmIhQgz4A74Jywkpqj5BmkBNSBH8AZ0AWOgHLBE5KdQ0R8/aoiciP95UJEKh7HHpljzNNWegpcmvox8BlYBFb02V9gATjxuFLyc3h6S13zVmo9bTum7Y/n1ZKbwwdM0wz4IUFn2+g0PE3KSByuYV6ZgdpDdL8a3eXYOFz7mJ/G0z/U0Jhm//8CJmPicBmudwzM1hAYgCvgjZbLah8Nh6sVUwZOgXGgA8xmsP0GVFK+3cI4XK2YPYUBWMtou27KH6PhUGfzYoSE67lxXq2cfbRNHzFwNG1Ya+fsrOX4T4XkqOgiARH5ZDqsZuxoyWE+EgvHfbh+pGkxwHdgLsO+PAVm1H5aPXxeiYXj/tT5D9jVegWopbTdVBiA9w5gYuGgN1zbpOgJcD3A7gFwW0ByFozDhutVU94fYneQYOdC4uDocToN48TeJjimPaPT9HQADM7R7+GtGfBdT9uGafvt+cogKEe/I8G8Xvs91voX4BB4Dbw0ehOuHF2ChOUYkOhcJFwH3mjeUMS1ZDCOQY1TmoXaW7C6iJQKmpSgHGlP11MaGjuBP38UxvEfISD3gYrV3MUAAAAASUVORK5CYII=", "ic-deess": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAgCAYAAACrdt7+AAACMElEQVR42uXZ34tMcRjH8dfutu22kUhpUjJJoURKaiOSUNaNUu4IJW5ckB/5B7Zt7/0mKX+AotwQrR8lChc2F0jEoiSa2Gk7Ls4z7WnaXT/atDPfT03n+z1z5pzp3fN9zvP9PC1Zli1CFSP4GeMf+C5BtWRZNoz2Ca6pwRnCF7zBWwziGZ4ExKYBkk3CfV7gDq7gVqMD2RYR0onWOHahA9MxDbMwEyXMwwy0jXPPCi7hRERUwwH5198uwBKsxlqsGuOayzjQSPmoZXJWDBFR27Ef3XXf7cbF1IAUtQz92FA4dw09qQKpaSvOYk7MB2N5fUwViEjQ1wMEvMdKvJuKQFr/wzMqWIdzMS/hEeanGiFF9eNQ8fkpRkhRh9FbmH9IHQgcj8JNJNu7qQOBXbgd426cSjWH1OslyjHehzOpA2nHcGFXvR73U1wyNVWxJo6duPcbK6LpgcAADhbmz1MHAidxurCLvplqDqnXg4KNcAF7UgcCnzA7xr1RtyQNBIp/qg9HU8sh9SrLTW04EhZC0hECc/Ewdseist0kb5UkFyHkfslyualE7qe8kptOSQIhd9YWy+1HES1XcQNLUwRSU08Ub5WYb8TT2CnvnMzqdirnkLHUhfPYUXd+JPZAA5F3HuN1CkAUls4x7A1I4+mzvPU6FOOv8h7Rt0jOFaO97CqqjQqkqM3YEp9yakvmT+yEFZFwF8rbrqWofEvy1uxE+ababED+5mXSFZZDh9G+dtsv8vOmBLxECHUAAAAASUVORK5CYII=", "ic-comp": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAcCAYAAAATFf3WAAAAO0lEQVR42u3OsQkAMAwDQZPBvP9WSpneYEhxD2rFVZLOq5PUcCs/pz4PEBAQEBAQEBAQEBAQEBAQcN4FZgZ/LV683bQAAAAASUVORK5CYII=", "ic-tone": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEYAAAAdCAYAAAAXZxqwAAACW0lEQVR42uWZQWtTQRSFvwolEhdSEIq4UOgmBHQlBASV4kKl/6DUYvwHgkjX4kZw053wULG6dyOKDXRhLMQiKLYVxEDFre1S0XZx3NzRcXzYxCaTee2FS2Ze3tw5c5g5M3PfkCQSsar9vk8BzL4B938OaAECVs1lz8YHCWxoQDPmEDAHXNzmvWfANLC+F4ipAE0jB2ALuAe8snoNuAIMW30dOAV8jIpSUkw/KWlTv+2xpIM5743Yf842rW00rDFJqepPm+mgzUzQphILb6ylVAK+e/XLwIMO29ZtqTnbD/zYDbvSsO02zq52QQrAfWvjbDUK7gjTcsFbCrM7iDPrxVkousbc9AbzpAfxnnrxbhRVYy7YOQTgG3CgR3G/AmUrnwfmi3SOKdsAnB0FPvco9jFgrd9i3C8Re+OVL/WQFIBPFtPZ26KIb+bpQNZHHfD7uZO6+NY9sB8i7Hhtr796quJ7HHgX+SAWHhxPAMspacwI0PDqp2OcTq2Ps169YViSIWYNGLXyNeBlxHvwC+C6lUeBdiriuxhJbLsR4+agxbfpgXk+QFKcN3pFzk5AtDwQSwmQ4nzJw9WKScxYsE02EyIlbya3DXNfiZkKEkeNBEnJu9VL0mQ/iKkEIitJtxImxfntAPNip1nA7V4Yz2H+i6SJApDifMIwK8jnnOmGmCM25TJJG/rbsgIREvrdnPFs2JgmJR0OiSlJWgmy9woy9Nn/CFiCPmYE/WusK5JK7q4UXpi27DvPQ+CRJZp2k5WBKUtf1LxvWL/yVI6YORv8shHymr1lNfOqkTb9E08QF2TTjUSnAAAAAElFTkSuQmCC", "ic-color": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADYAAAAoCAYAAAC1mQk2AAADIUlEQVR42sVaT2sTQRT/JeAt3oIQIhLJB0jJpVi2ivgFchGPNWJPLV6Kn0AwBSkSAiEQW+oXkUCKZ3PyoiClntqe/Esvz8tbednO7L6Z3Z08eDCZvv3tvpk3b35vphUigofUAdzh9imACxQr+fGJSKMNIpoS0SXZ5ZJtGkrMUvGzDDpENCd3mfGzK8OvpIRiH8BRou8EwEcOj+/c1wRwG8B9ABsJ+6cA3q8E3+LxSIzOFYdASzEDbba9Es+PVoBvdGwoHvpFROsea2adiP4InGFAfKNjfWH8hYiaHi+NtckYsTwPgG9cYx0An0SU3gTwM2fargH4YflbGfhrABYAUBWdQ9HeKOClYIxNQ39Z+G+TyaMtpnSSIzxsOg2I3yKi/zO2J7x+g+LlhqVdlOyL9p6csXOx8RUxgmUzFZPGG/25zIqxDHKCl81U0nQg8FBlwhnLWY5w6HNWjRJM4shg+44ZRiwP+NmtHO8/WyLRRNQVnvY8RyuNSXQNM9R1ZRIK7Un8agELdwhgl9u/Of1uA/imePYr224C+Mt9u4mtx0+IqC483XEcJQ2TqBtmrO7KJBS6I/HzJI9O4mNrKbZJsdnVEnadPMkDokK95xiCWiZxYWnrmUS2REv47O1YeNtWlg8uTGLsmByuMQmH7xnJGTsQnr9UjI4rU6k6Mo99y7tsIr/5IFlozoTXUcYIuTCVyLDGIlcmocT/YKrHfJJBVrKppbCNmksycE02MkQWAJ6J358TrEQejWmYSp0xYtlW4puZhA5/kXbmkVW6a5hKEUcDPQNT8T4asFGkiYUiJR1rsa3rYc7EkP1MjmnxoWUVscwTqfiYiF7wejCx+i0P/AGziGPRP3XFL6sMmZd8YJqJr6UrLd5kswrHsXJDLR3ft6g7FC98WMIZxiOBf+iD4Vu2vBbtJyWcYTwW7Ve+ZYuvzhyZhFaNTMJVK573Y6EOWNeWNl0HyVNBLxyZhOayz84kAoZi0EsGVy1qXWiYhC3Nq5hEyDWmvcg7YUJ7yn13ATS44o0cLgqDh2JIphI8FEMzlaChmCa3+B65rH+fuCb/AIHntdq7Gw7AAAAAAElFTkSuQmCC", "ic-space": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEQAAAAiCAYAAADmvn/1AAAEUUlEQVR42tVab2RWURj/9VbKLK+S8bZkycuUeZklI2NGIpGY0peMioyUGhkZ+xaZ0peoPs5If0Vfo9n0b62/W6LSvzWNUqnVNn59eW6eTve955y7e9+3Dse9791znvOc33n+nedsDkmUqVUAyAHIyjsAfAfwGcBbAD/LIdS8Es2zAsAGAOuk5wEstIz5AWAEwD0A9wFcBPA+bUHnpKgheQAHAWwCsDwhnm8FmDMAHv0vgOwF0A5gTZFdfyCLeQbgA4CPYiqBGWVFo1YCqAXQCGBuCK8nAI4LOMk1kkn1dpLj/LvdJnmYZGEWvAskO0gOhfAfI7k/qXUkwWQdyQlDyHGS3SRzCQIe9JzwNud8RbK53ICcM4R6Q3JvCiAU63tEQ3TrJZkpNSAFQ5BJkkdKCITZj4Ro6OpSAbLDmPwmycoyghH0xSQHjE3amTYg3WrCKXGW+Mf6YWPDutIC5JgBRmMCwi8V81svvUCyKgG+TSS/KHmPJg1Il2GfNTEF3UryNMlRAbVYmyL5WGi3xpwrb/i5rqQAaTOEXeApWL14/tm28yTrPOeuMHhYfYotU60D8FD9XuZxnsgDuCA8zDYoZ5QR4fdVvi8CUC0Z6loADSFZ6i0Auz1S9xyAMfV7jcwbK1OdVOg2zSI/IclrJDfGUP3NJK+E8Ov19Ck6+sQyGa3mrtGkLiRROikhcbaOMkvylMF7QnyFb/Tp9QWkRQ3ud5xwiyFsP8nqlFL3m8ZcWxzH9qsxLT6AjClv77K7uwwBO0qUnepItctRy/Sh0AmQfZ4L20ZyRgHYXMIkrNkApdXTdNpdABmPQjDEZ2hnVV+GzLRgyOBSZnijcqpIQHTO0ebAeMJmk44JVKP0fEweLYaW+ph4WxQgo0L0zYHp2Zg+o1LUdlgtwsxSH5I8KDYf5wxz1oE+SClGiwGiVa/bIfv0jUKQEDzlkZ1OyhhX/vq0azNffVAthAHSowiqPMKXS1WsNqS8+IrkCUmnW6TvlG8vQsqELvWNao+NyinaY2GAjKkaaBSjBiPpcskStWkMOWa9TSKL1pZmRy0MWoOF9raq9P0BSI2HP+jzyFFWKxOZIdkZw2F2KtlmRNtshaKg9VloOxRtjQZEe13biXJGnT5dw5trjlCstxp1Wxv9JceIU2dGGzNi2Bjo9HyzhbYnxlnINYr0eMhpq6f8EZmCj8PyccAy+LQjcFllKkMJJmFDav6s40JPOUamYZLISBWgVp4jltrCennecbi9my/vBxK8Vzskz/kA9lhoBw2Zi7URVSdBBkClunh+5lD0AYC7FrpWeb4EcCNBQK4DeC3v2y20d/VCI9pzBXJFBsBS9cf3lspTUL16apmkIM+rKdxHX5ZnvYVOb26V5QL99xpNQD5FDKxyBC6vgLuTAiD31PuqCLp3xmYWa3rN2YyoyrS6nY/6B5eA7msE3RJF9y4FQIIdnTY202yfFV2F5f9QAroFvwBvO89uiTnS8AAAAABJRU5ErkJggg=="};
+const LISTEN="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDIwIDIwIj48dGl0bGU+bGlzdGVuPC90aXRsZT48cGF0aCBkPSJNMyAxMSBWOSBBNyA3IDAgMCAxIDE3IDkgVjExIiBzdHJva2U9IiNGMUYxRUEiIHN0cm9rZS13aWR0aD0iMS40IiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBzdHJva2UtbGluZWNhcD0icm91bmQiIGZpbGw9Im5vbmUiIC8+PHJlY3QgeD0iMiIgeT0iMTAiIHdpZHRoPSI0IiBoZWlnaHQ9IjgiIHJ4PSIyIiBmaWxsPSIjRjFGMUVBIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIgLz48cmVjdCB4PSIxNCIgeT0iMTAiIHdpZHRoPSI0IiBoZWlnaHQ9IjgiIHJ4PSIyIiBmaWxsPSIjRjFGMUVBIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMCIgLz48L3N2Zz4NCg==";
+const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const h=(tag,cls,parent,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;if(parent)parent.appendChild(e);return e};
+
+/* ===== shared state ===== */
+const MODS=['clean','tune','deess','comp','tone','color','space'];
+const MOD={
+  clean:{name:'CLEAN',sub:'NOISE / BREATH / CONTROL',rackMode:'natural',k:[['CLEANUP','REMOVE DISTRACTIONS'],['PRESERVE','KEEP VOICE DETAIL']],v:[.55,.68],modes:['SOFT','NATURAL','TIGHT'],mode:1,extra:'LISTEN REMOVED',ex:[903,202],mb:[[412,147],[562,147],[712,147]],desc:'Reduces noise, breaths, and distractions while preserving the detail of the performance. Listen Removed plays only what the module takes out.'},
+  tune:{name:'TUNE',sub:'PITCH / STABILITY / FEEL',rackMode:'natural',k:[['CORRECTION','PITCH AMOUNT'],['SPEED','NATURAL / LOCKED']],v:[0,.38],modes:['NATURAL','MODERN','HARD'],mode:0,extra:'CHROMATIC',ex:[832,176],mb:[[364,105],[474,105],[584,105]],y:700,hgt:27,desc:'Pitch correction from a light touch to locked. Choose Natural, Modern or Hard, and work in a key or chromatic.'},
+  deess:{name:'DE-ESS',sub:'SIBILANCE CONTROL',rackMode:'balanced',k:[['REDUCTION','SIBILANCE AMOUNT'],['FOCUS','LOWER / HIGHER']],v:[.42,.509384],modes:['SOFT','BALANCED','STRONG'],mode:1,extra:'LISTEN S',ex:[903,202],mb:[[412,147],[562,147],[712,147]],desc:'Controls harsh S sounds in a focused band you can move. Listen S solos exactly what it is catching.'},
+  comp:{name:'COMP',sub:'VOCAL CONTROL',rackMode:'modern',k:[['AMOUNT','LEVELING INTENSITY'],['FEEL','SMOOTH / FORWARD']],v:[.6,.42],modes:['SMOOTH','MODERN','AGGRESSIVE'],mode:1,extra:'DELTA',ex:[957,148],mb:[[412,147],[562,147],[712,147]],desc:'Keeps phrase level consistent, from smooth control to a more forward sound. Delta plays only what the compressor changes.'},
+  tone:{name:'TONE',sub:'SIX-BAND PARAMETRIC EQ',rackMode:'eq mix',k:null,v:[1],desc:'A six-band parametric EQ with ±18 dB range, from low shelf to air. Wheel for Q, Shift for fine, right-click for band controls.'},
+  color:{name:'COLOR',sub:'HARMONICS / DENSITY / HEAT',rackMode:'tube',k:[['CHARACTER','CLEAN / SATURATED'],['DENSITY','LIGHT / RICH']],v:[.38,.45],modes:['CONSOLE','TUBE','TAPE'],mode:1,extra:'DELTA',ex:[903,202],mb:[[412,147],[562,147],[712,147]],desc:'Adds harmonics and density with Console, Tube or Tape flavors. Delta plays only the color it adds.'},
+  space:{name:'SPACE',sub:'DEPTH / WIDTH / DUCK',rackMode:'plate',k:[['AMOUNT','SPACE SEND'],['DUCK','KEEP VOICE FORWARD']],v:[.18,.45],modes:['TIGHT','PLATE','AMBIENT'],mode:1,extra:null,mb:[[412,127],[542,127],[672,127]],desc:'Adds depth and width, then ducks the effect under the performance to keep the vocal clear. Tight, Plate, or Ambient, with tempo sync.'}
+};
+const S={control:.6,character:.35,ab:'A',autolvl:true,aud:'processed',scale:1,adv:'clean',screen:'voice',extras:{}};
+const subs=[]; // knob bindings: {get,set,els}
+function bindKey(key){ // returns getter/setter for a state key
+  if(key==='control'||key==='character')return{get:()=>S[key],set:v=>{S[key]=v}};
+  const [m,i]=key.split(':');return{get:()=>MOD[m].v[+i],set:v=>{MOD[m].v[+i]=v}};
+}
+const knobsByKey={};
+function fmt(key,v){ if(key==='deess:1'){return (clamp(7*Math.pow(14/3,v-0.509384),3,14)).toFixed(2)+' kHz'} return Math.round(v*100)+'%'}
+const ARC='M 61.269935 174.730065 A 77.4 77.4 0 1 1 170.730065 174.730065';
+let gid=0;
+function makeKnob(parent,key,opts={}){
+  const el=h('div','ak',parent);
+  el.tabIndex=0;el.setAttribute('role','slider');el.setAttribute('aria-valuemin','0');el.setAttribute('aria-valuemax','100');el.setAttribute('aria-label',opts.label||key);
+  const id='g'+(gid++);
+  el.innerHTML=`<img src="${IMG['01-housing']}" alt=""><img src="${IMG['02-ticks']}" alt=""><img src="${IMG['primary-lime-track']}" alt="">
+  <svg viewBox="0 0 232 240"><defs><linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="38.6" y1="120" x2="193.4" y2="120"><stop stop-color="#A8ED13"/><stop offset=".5" stop-color="#D3FF19"/><stop offset="1" stop-color="#F1EF13"/></linearGradient></defs>
+  <path class="arcv" d="${ARC}" pathLength="100" fill="none" stroke="url(#${id})" stroke-opacity=".92" stroke-width="7.2"/>
+  <path class="ptr" d="M 116 47.1 L 116 38.1" fill="none" stroke="#D3FF19" stroke-opacity=".92" stroke-width="3"/></svg>
+  <img src="${IMG['06-cap-stationary']}" alt=""><div class="v tnum"></div><div class="hit"></div>`;
+  const b=bindKey(key), def=b.get();
+  const arc=el.querySelector('.arcv'),ptr=el.querySelector('.ptr'),val=el.querySelector('.v');
+  const k={el,render(){const v=b.get();arc.setAttribute('stroke-dasharray',`${(100*v).toFixed(2)} 100`);ptr.setAttribute('transform',`rotate(${(-135+270*v).toFixed(2)} 116 120)`);val.textContent=fmt(key,v);el.setAttribute('aria-valuenow',Math.round(v*100));el.setAttribute('aria-valuetext',fmt(key,v))}};
+  (knobsByKey[key]=knobsByKey[key]||[]).push(k);
+  const set=v=>{b.set(clamp(v,0,1));(knobsByKey[key]||[]).forEach(x=>x.render());onChange(key)};
+  let sy=null,sv=0;
+  el.addEventListener('pointerdown',e=>{sy=e.clientY;sv=b.get();el.setPointerCapture(e.pointerId);e.preventDefault();e.stopPropagation()});
+  el.addEventListener('pointermove',e=>{if(sy===null)return;set(sv+(sy-e.clientY)/(e.shiftKey?700:200))});
+  const end=()=>sy=null;el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
+  el.addEventListener('wheel',e=>{e.preventDefault();set(b.get()-Math.sign(e.deltaY)*.02)},{passive:false});
+  el.addEventListener('keydown',e=>{const d={ArrowUp:.01,ArrowRight:.01,ArrowDown:-.01,ArrowLeft:-.01,PageUp:.1,PageDown:-.1}[e.key];if(e.key==='Home')set(0);else if(e.key==='End')set(1);else if(d===undefined)return;else set(b.get()+d);e.preventDefault()});
+  el.addEventListener('dblclick',e=>{e.stopPropagation();set(def)});
+  el.addEventListener('click',e=>e.stopPropagation());
+  k.render();
+  return el;
+}
+function placeKnob(parent,key,cx,cy,D,label){const s=D*.9/180;const el=makeKnob(parent,key,{label});el.style.left=(cx-116*s)+'px';el.style.top=(cy-120*s)+'px';el.style.transform=`scale(${s})`;return el}
+
+/* ===== the plugin stage ===== */
+const stage=$('#stage'), rig=$('#rig');
+const SCR={voice:'01-voice',rack:'02-rack',clean:'03-advance-clean',tune:'03-advance-tune',deess:'03-advance-deess',comp:'03-advance-comp',tone:'03-advance-tone',color:'03-advance-color',space:'03-advance-space',learn:'04-learn-waiting',presets:'05-presets',settings:'06-settings'};
+const scrEls={},ovs={};
+Object.entries(SCR).forEach(([k,f],i)=>{const im=h('img','scr',stage);im.src=IMG[f];im.alt='';im.width=1280;im.height=800;if(i>1)im.loading='lazy';scrEls[k]=im});
+const R=(el,x,y,w,hh)=>{el.style.left=x+'px';el.style.top=y+'px';el.style.width=w+'px';el.style.height=hh+'px';return el};
+function hot(p,x,y,w,hh,label,fn){const b=R(h('button','hot',p),x,y,w,hh);b.type='button';b.setAttribute('aria-label',label);b.title=label;b.addEventListener('click',fn);return b}
+function tog(p,x,y,w,hh,text,on,fn){const b=R(h('button','tg'+(on?' sel':''),p,text),x,y,w,hh);b.type='button';b.addEventListener('click',()=>fn(b));return b}
+function group(btns,idx){btns.forEach((b,i)=>b.classList.toggle('sel',i===idx))}
+const toast=h('div','toast',stage);let tt;
+function say(t){toast.textContent=t;toast.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>toast.classList.remove('on'),1600)}
+const isMain=k=>!['presets','settings'].includes(k);
+const footers=[];
+
+function chrome(p){ // header + footer controls common to main screens
+  hot(p,460,56,120,32,'Voice view',()=>go('voice'));
+  hot(p,580,56,120,32,'Rack view',()=>go('rack'));
+  hot(p,700,56,120,32,'Advance view',()=>go(S.adv));
+  hot(p,786,8,428,30,'Open presets',()=>go('presets'));
+  hot(p,1185,11,30,24,'Settings',()=>go('settings'));
+  hot(p,1226,11,31,24,'Power',()=>say('bypass is a host-side control in this demo'));
+  const a=tog(p,1026,11,27,24,'A',S.ab==='A',()=>{S.ab='A';syncAB()}), bb=tog(p,1054,11,27,24,'B',S.ab==='B',()=>{S.ab='B';syncAB()});
+  const al=tog(p,1098,11,75,24,'AUTO LVL',S.autolvl,()=>{S.autolvl=!S.autolvl;syncAB()});
+  abSets.push([a,bb,al]);
+  const tb=R(h('div','box tnum',p),313,759,72,30), sb=R(h('div','box tnum',p),474,759,69,30);
+  footers.push([tb,sb]);
+  hot(p,633,759,194,30,'Quality modes',()=>say('Track · Mix · Studio — 27.7 ms total latency in Mix'));
+}
+const abSets=[];
+function syncAB(){abSets.forEach(([a,b,al])=>{a.classList.toggle('sel',S.ab==='A');b.classList.toggle('sel',S.ab==='B');al.classList.toggle('sel',S.autolvl)})}
+function syncFooter(){footers.forEach(([t,s])=>{t.textContent=Math.round(MOD.tune.v[0]*100)+'%';s.textContent=Math.round(MOD.space.v[0]*100)+'%'})}
+
+// VOICE
+{const p=ovs.voice=h('div','ov',stage);chrome(p);
+  placeKnob(p,'control',291,564,185,'Control');placeKnob(p,'character',989,564,185,'Character');
+  hot(p,470,497,340,34,'Vocal style: open presets',()=>go('presets'));
+  const o=tog(p,470,578,166,34,'ORIGINAL',false,()=>{S.aud='original';group(aud,0)}), pr=tog(p,644,578,166,34,'PROCESSED',true,()=>{S.aud='processed';group(aud,1)});const aud=[o,pr];
+  hot(p,531,642,218,37,'Learn Voice',()=>go('learn'));
+}
+// RACK
+{const p=ovs.rack=h('div','ov',stage);chrome(p);
+  MODS.forEach((m,i)=>{const cx=130+170*i;hot(p,cx-78,245,156,230,`Open ${MOD[m].name} in Advance`,()=>{S.adv=m;go(m)});placeKnob(p,m+':0',cx,420,130,MOD[m].name)});
+}
+// ADVANCE x7
+MODS.forEach(m=>{const p=ovs[m]=h('div','ov',stage);chrome(p);const M=MOD[m];
+  MODS.forEach((n,i)=>{const cx=130+170*i;hot(p,cx-72,132,144,152,`Open ${MOD[n].name}`,()=>{S.adv=n;go(n)});placeKnob(p,n+':0',cx,198,90,MOD[n].name)});
+  hot(p,1176,322,34,32,'Collapse to rack',()=>go('rack'));
+  if(M.k){const y=m==='tune'||m==='comp'?599:600;placeKnob(p,m+':0',520,y,114,M.k[0][0]);placeKnob(p,m+':1',748,y,114,M.k[1][0]);
+    const by=M.y||699,bh=M.hgt||28;const bs=M.modes.map((t,i)=>tog(p,M.mb[i][0],by,M.mb[i][1],bh,t,i===M.mode,()=>{M.mode=i;group(bs,i);renderRackModes()}));
+    if(m==='tune')hot(p,716,700,106,27,'Key',()=>say('key select: C'));
+    if(M.extra){const x=tog(p,M.ex[0],by,M.ex[1],bh,M.extra,false,b=>{b.classList.toggle('sel')})}
+    if(m==='space')hot(p,903,699,202,28,'Sync',()=>say('sync: 1/8 dotted'));
+  } else {hot(p,52,330,1176,350,'Parametric EQ',()=>say('six bands · wheel: Q · shift: fine · right-click: controls'))}
+});
+// LEARN
+{const p=ovs.learn=h('div','ov',stage);chrome(p);hot(p,543,604,194,35,'Cancel',()=>go('voice'));const d=h('div','pulse',p);d.style.left='636px';d.style.top='554px';d.style.display='none'}
+// PRESETS (modal)
+{const p=ovs.presets=h('div','ov',stage);hot(p,1090,200,36,34,'Close presets',()=>go('voice'));hot(p,667,552,447,39,'Load preset',()=>{go('voice');say('Modern Lead loaded')});hot(p,150,552,150,39,'Open preset',()=>say('opens a preset file'));hot(p,338,552,174,39,'Save current',()=>say('saves your current chain'))}
+// SETTINGS (modal)
+{const p=ovs.settings=h('div','ov',stage);hot(p,930,207,34,32,'Close settings',()=>go('voice'));const sc=[[660,'100%'],[755,'125%'],[850,'150%']].map(([x,t],i)=>tog(p,x,278,88,35,t,i===1,()=>{group(sc,i);say('display scale never changes the sound')}));tog(p,824,557,115,34,'DONE',true,()=>go('voice'))}
+
+function renderRackModes(){/* modes live in screen art; state kept for the module section */ renderModuleDetail()}
+const chipDefs=[['voice','Voice'],['rack','Rack'],['adv','Advance'],['learn','Learn Voice'],['presets','Presets'],['settings','Settings']];
+const chips=$('#chips');chips.innerHTML=chipDefs.map(([k,t])=>`<button class="chip" type="button" data-k="${k}" aria-pressed="false">${t}</button>`).join('');
+chips.addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;go(b.dataset.k==='adv'?S.adv:b.dataset.k)});
+function go(k){
+  S.screen=k;if(MODS.includes(k))S.adv=k;
+  Object.entries(scrEls).forEach(([n,im])=>im.classList.toggle('on',n===k||(!isMain(k)&&n===k)));
+  Object.entries(ovs).forEach(([n,o])=>o.classList.toggle('on',n===k));
+  const ck=MODS.includes(k)?'adv':k;chips.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k===ck));
+  $('#rigState').textContent=MODS.includes(k)?'advance · '+MOD[k].name.toLowerCase():k;
+  const pl=ovs.learn.querySelector('.pulse');if(pl)pl.style.display=k==='learn'&&!RM?'block':'none';
+}
+function fit(){const s=rig.clientWidth/1280;stage.style.transform=`scale(${s})`}
+new ResizeObserver(fit).observe(rig);fit();
+syncAB();syncFooter();go('voice');
+
+/* rig tilt on scroll */
+function tilt(){if(RM){rig.style.transform='';return}const r=rig.getBoundingClientRect();const p=clamp(1-(r.top-innerHeight*.12)/(innerHeight*.75),0,1);rig.style.transform=`rotateX(${lerp(18,0,p).toFixed(2)}deg) scale(${lerp(.94,1,p).toFixed(3)})`}
+addEventListener('scroll',tilt,{passive:true});tilt();
+
+/* ===== macros section ===== */
+function bigKnob(host,key,label){const el=makeKnob(host,key,{label});const fitK=()=>{const s=host.clientWidth/232;el.style.transform=`scale(${s})`};new ResizeObserver(fitK).observe(host);fitK()}
+bigKnob($('#bigControl'),'control','Control');bigKnob($('#bigCharacter'),'character','Character');
+function zones(){[['#zc',S.control],['#zh',S.character]].forEach(([s,v])=>{const z=[...document.querySelectorAll(s+' span')].filter(x=>x.textContent!=='/');z.forEach((x,i)=>x.classList.toggle('on',i===Math.min(2,Math.floor(v*3))))})}
+zones();
+
+/* ===== modules section ===== */
+let order=MODS.slice();
+const rs=$('#rs');
+function renderRack(){rs.innerHTML=order.map(m=>`<div class="rsi" data-m="${m}"><i class="led"></i><span class="ic" style="--m:url(${IMG['ic-'+m]})"></span>${MOD[m].name}<span class="grip">⠿</span></div>`).join('');$('#order').textContent='signal flow: '+order.map(m=>MOD[m].name).join(' → ')}
+renderRack();
+if(window.Sortable){Sortable.create(rs,{animation:180,ghostClass:'ghost',chosenClass:'chosen',onEnd(){order=[...rs.children].map(c=>c.dataset.m);$('#order').textContent='signal flow: '+order.map(m=>MOD[m].name).join(' → ')}})}
+else{$('#order').textContent+=' · drag to reorder in the plugin'}
+rs.addEventListener('dblclick',e=>{const c=e.target.closest('.rsi');if(c)selectMod(c.dataset.m)});
+const mlist=$('#mlist');let selMod='clean';
+mlist.innerHTML=MODS.map((m,i)=>`<button class="mbtn" role="tab" type="button" data-m="${m}" aria-selected="${i===0}"><span class="ic" style="--m:url(${IMG['ic-'+m]})"></span><span><b>${MOD[m].name}</b><span class="s">${MOD[m].sub}</span></span><span class="m" data-mode="${m}"></span></button>`).join('');
+mlist.addEventListener('click',e=>{const b=e.target.closest('.mbtn');if(b)selectMod(b.dataset.m)});
+function selectMod(m){selMod=m;mlist.querySelectorAll('.mbtn').forEach(b=>b.setAttribute('aria-selected',b.dataset.m===m));renderModuleDetail()}
+function modeText(m){const M=MOD[m];return M.modes?M.modes[M.mode].toLowerCase():M.rackMode}
+function renderModuleDetail(){
+  mlist.querySelectorAll('[data-mode]').forEach(s=>s.textContent=modeText(s.dataset.mode));
+  const M=MOD[selMod];
+  $('#mdetail').innerHTML=`<img src="${IMG['panel-'+selMod]}" alt="${M.name} module in Advance view" width="1220" height="450">
+  <div class="mbody"><div><h3>${M.name}</h3><span class="mono sub">${M.sub}</span><p>${M.desc}</p><button class="btn btn-primary btn-sm" type="button" id="openAdv">Open ${M.name} in the plugin ↑</button></div>
+  <div class="kv">${M.k?M.k.map((k,i)=>`<div><span>${k[0][0]+k[0].slice(1).toLowerCase()} <span class="mono" style="color:var(--fg-3)">${k[1].toLowerCase()}</span></span><span class="mono tnum">${fmt(selMod+':'+i,M.v[i])}</span></div>`).join('')+`<div><span>Modes</span><span class="mono">${M.modes.join(' · ').toLowerCase()}</span></div>`+(M.extra?`<div><span><img class="listen" src="${LISTEN}" alt="">Monitor</span><span class="mono">${M.extra.toLowerCase()}</span></div>`:''):`<div><span>Bands</span><span class="mono">6</span></div><div><span>Range</span><span class="mono">±18 dB</span></div><div><span>Band 1</span><span class="mono">low shelf · 100 Hz · Q 0.71</span></div><div><span>Mix</span><span class="mono tnum">${fmt('tone:0',M.v[0])}</span></div>`}</div></div>`;
+  $('#openAdv').addEventListener('click',()=>{S.adv=selMod;go(selMod);document.getElementById('try').scrollIntoView({behavior:RM?'auto':'smooth'})});
+}
+renderModuleDetail();
+let mdTimer;
+function onChange(key){
+  if(key==='control'||key==='character')zones();
+  if(key==='tune:0'||key==='space:0')syncFooter();
+  const m=key.split(':')[0];if(m===selMod){clearTimeout(mdTimer);mdTimer=setTimeout(()=>{const kv=document.querySelectorAll('#mdetail .kv .tnum');const M=MOD[selMod];if(M.k){kv[0]&&(kv[0].textContent=fmt(selMod+':0',M.v[0]));kv[1]&&(kv[1].textContent=fmt(selMod+':1',M.v[1]))}else if(kv[0])kv[0].textContent=fmt('tone:0',M.v[0])},60)}
+}
+
+/* ===== learn demo ===== */
+const lact=$('#lact'),lsec=$('#lsec'),lstate=$('#lstate'),lsteps=[...$('#lsteps').children],steps=[...$('#steps').children];
+function learnStage(i){lsteps.forEach((s,k)=>s.classList.toggle('on',k===i));steps.forEach((s,k)=>s.classList.toggle('on',k<=i))}
+learnStage(0);steps[0].classList.add('on');
+let lrun=false;
+$('#runLearn').addEventListener('click',()=>{
+  if(lrun)return;lrun=true;learnStage(0);lstate.textContent='CAPTURING';
+  const t0=performance.now(),dur=RM?1:12000;
+  (function f(now){const k=clamp((now-t0)/dur,0,1);lact.setAttribute('stroke-dasharray',`${(k*100).toFixed(2)} 100`);lsec.textContent=(k*12).toFixed(1)+' s';
+    if(k<1){requestAnimationFrame(f)}else{learnStage(1);lstate.textContent='ANALYZING';setTimeout(()=>{learnStage(2);lstate.textContent='READY';lrun=false},RM?0:1400)}})(t0);
+});
+
+/* ===== presets ===== */
+const PRE=[
+  {n:'Modern Lead',c:'lead',d:'Balanced vocal leveling with a measured response. A flexible starting point for a lead vocal.',t:['BALANCED','CONTROLLED','PRESENT']},
+  {n:'Intimate Vocal',c:'lead'},
+  {n:'Forward Rap',c:'rap'},
+  {n:'Airy Doubles',c:'doubles'}
+];
+const cats=['all presets','favorites','lead','rap','doubles','user'];let cat='all presets',pick=0;
+$('#cats').innerHTML=cats.map(c=>`<button class="chip" type="button" data-c="${c}" aria-pressed="${c===cat}">${c}</button>`).join('');
+$('#cats').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;cat=b.dataset.c;$('#cats').querySelectorAll('.chip').forEach(x=>x.setAttribute('aria-pressed',x===b));renderPresets()});
+function renderPresets(){
+  const list=PRE.map((p,i)=>({...p,i})).filter(p=>cat==='all presets'||p.c===cat);
+  $('#prows').innerHTML=list.length?list.map(p=>`<button class="prow" type="button" data-i="${p.i}" aria-pressed="${p.i===pick}"><span>${p.n}</span><span class="star">${p.i===0?'★':'☆'}</span></button>`).join(''):`<p class="mono" style="color:var(--fg-3);margin:10px 4px">${cat==='user'?'your saved chains appear here':'star a preset to keep it here'}</p>`;
+  const p=PRE[pick];
+  $('#pdet').innerHTML=`<div class="pbar"><button type="button" id="pPrev" aria-label="Previous preset"><svg viewBox="0 0 20 20"><path d="M12 5 L7 10 L12 15" stroke="#F1F1EA" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button><span>${p.n}</span><button type="button" id="pNext" aria-label="Next preset"><svg viewBox="0 0 20 20"><path d="M8 5 L13 10 L8 15" stroke="#F1F1EA" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button></div><span class="mono" style="color:var(--fg-3)">${p.c} · vocal style</span><h3 style="margin-top:10px">${p.n.toUpperCase()}</h3>${p.d?`<p>${p.d}</p><div class="ptags">${p.t.map(t=>`<span class="ptag">${t}</span>`).join('')}</div>`:`<p>A full seven-module starting point for ${p.c==='doubles'?'doubles and stacks':p.c==='rap'?'rap vocals':'lead vocals'}. Load it, then shape it with Control and Character.</p>`}
+  <span class="mono" style="color:var(--fg-3);margin-top:24px">CHAIN PREVIEW</span><div class="chain">${MODS.map(m=>`<span class="cm"><i></i>${MOD[m].name}</span>`).join('')}</div>
+  <p class="mono" style="color:var(--fg-3);font-size:12px">Seven modules. One vocal chain.</p>
+  <button class="btn btn-primary btn-sm" type="button" id="loadP">Load in the plugin ↑</button>`;
+  $('#pPrev').addEventListener('click',()=>{pick=(pick+PRE.length-1)%PRE.length;renderPresets()});$('#pNext').addEventListener('click',()=>{pick=(pick+1)%PRE.length;renderPresets()});
+  $('#loadP').addEventListener('click',()=>{go('presets');document.getElementById('try').scrollIntoView({behavior:RM?'auto':'smooth'})});
+}
+$('#prows').addEventListener('click',e=>{const b=e.target.closest('.prow');if(!b)return;pick=+b.dataset.i;renderPresets()});
+renderPresets();
+
+/* ===== specs count-up ===== */
+const nio=new IntersectionObserver(es=>es.forEach(e=>{if(!e.isIntersecting||RM)return;nio.disconnect();
+  document.querySelectorAll('.num b').forEach(n=>{const to=+n.dataset.to,dec=+(n.dataset.dec||0),t0=performance.now();(function st(now){const k=clamp((now-t0)/1400,0,1),v=to*(1-Math.pow(1-k,3));n.textContent=v.toFixed(dec);n.parentElement.querySelector('.bar i').style.width=(k*100)+'%';if(k<1)requestAnimationFrame(st)})(t0)})}),{threshold:.4});
+nio.observe($('#nums'));
+
+/* ===== manifesto morph ===== */
+const man=$('#manifesto'),panel=$('#mpanel'),mtext=$('#mtext'),mlogo=$('#mlogo'),mline=$('#mline');
+(()=>{const out=[];mline.childNodes.forEach(n=>{if(n.nodeType===3)n.textContent.split(/(\s+)/).forEach(w=>out.push(w.trim()?`<span class="w">${w}</span>`:w));else out.push(`<span class="w">${n.outerHTML}</span>`)});mline.innerHTML=out.join('')})();
+const words=[...mline.querySelectorAll('.w')];
+function morph(){if(RM)return;const r=man.getBoundingClientRect(),total=r.height-innerHeight,p=clamp(-r.top/total,0,1);
+  const rev=clamp(p/.42,0,1);words.forEach((w,i)=>w.style.opacity=i/words.length<rev?1:.12);
+  const e=clamp((p-.55)/.4,0,1),ee=e*e*(3-2*e);const W0=Math.min(1240,innerWidth-32),H0=Math.min(640,innerHeight*.74);
+  panel.style.width=lerp(W0,116,ee)+'px';panel.style.height=lerp(H0,116,ee)+'px';panel.style.borderRadius=lerp(28,30,ee)+'px';
+  mtext.style.opacity=clamp(1-ee*2.4,0,1);const ls=lerp(58,82,ee);mlogo.style.width=mlogo.style.height=ls+'px';mlogo.style.marginLeft=-ls/2+'px';mlogo.style.bottom=`calc(${lerp(9,50,ee)}% - ${ee*ls/2}px)`;mlogo.style.borderRadius=lerp(16,22,ee)+'px'}
+addEventListener('scroll',morph,{passive:true});morph();
+
+/* ===== form ===== */
+$('#form').addEventListener('submit',e=>{e.preventDefault();const v=$('#email').value.trim(),m=$('#formMsg');
+  m.textContent=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)?'Signup opens at launch. This form is not connected yet.':'Enter an email address like you@studio.com.'});
+
+/* ===== soundwave background: reacts to CONTROL (evenness) and CHARACTER (harmonic detail) ===== */
+const cv=$('#ribbons'),cx=cv.getContext('2d');let W=0,H=0;const DPR=Math.min(devicePixelRatio||1,1.5);
+function size(){W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0)}size();addEventListener('resize',size);
+const lanes=[.62,.5,.56,.44,.6];let cyS=lanes[0];let motion=!RM;
+const ss=t=>t*t*(3-2*t);
+function env(u){ // vocal-like phrase envelope at world position u
+  const phrase=ss(clamp((Math.sin(u*.0021)+Math.sin(u*.0013+1.7)*.8+.35)*1.6,0,1));
+  const syl=Math.pow(Math.abs(Math.sin(u*.031+Math.sin(u*.007)*2)),.55)*(.55+.45*Math.sin(u*.0113+.6));
+  return clamp(phrase*(.18+.82*syl),0,1)}
+function waves(t){
+  const docH=document.documentElement.scrollHeight-H||1,p=clamp(scrollY/docH,0,1)*(lanes.length-1),i=Math.floor(p),f=p-i;
+  cyS=lerp(cyS,lerp(lanes[i],lanes[Math.min(i+1,lanes.length-1)],f),.05);
+  const c=S.control,hc=S.character,cy=H*cyS,maxA=H*(W<700?.13:.17);
+  cx.clearRect(0,0,W,H);
+  const step=W<700?4:3,off=t*.09;
+  // mirrored clip waveform (bars)
+  for(let x=0;x<W;x+=step){
+    const u=x+off, edge=Math.pow(Math.sin(Math.PI*x/W),.7);
+    let a=env(u);
+    a=Math.pow(a,1-.62*c)*(.62+.38*c);                     // CONTROL: more even, more forward
+    a*=1+hc*.42*Math.sin(u*.9)*Math.sin(u*.37+t*.002);       // CHARACTER: harmonic detail
+    const A=Math.max(.6,a*maxA*edge);
+    cx.fillStyle=`rgba(211,255,25,${(.05+.07*hc)*edge})`;cx.fillRect(x,cy-A,step-1,A*2);
+  }
+  // top/bottom outline
+  cx.beginPath();for(let x=0;x<=W;x+=step){const u=x+off,edge=Math.pow(Math.sin(Math.PI*x/W),.7);let a=env(u);a=Math.pow(a,1-.62*c)*(.62+.38*c);a*=1+hc*.42*Math.sin(u*.9)*Math.sin(u*.37+t*.002);const y=cy-Math.max(.6,a*maxA*edge);x?cx.lineTo(x,y):cx.moveTo(x,y)}
+  cx.strokeStyle='rgba(211,255,25,.22)';cx.lineWidth=1;cx.stroke();
+  // oscilloscope traces
+  const tr=[[.0,'241,241,234',.09,1],[.33,'211,255,25',.16,1.6],[.66,'241,241,234',.06,2.3]];
+  tr.forEach(([ph,col,al,fq],k)=>{cx.beginPath();for(let x=0;x<=W;x+=4){const v=x/W,edge=Math.sin(Math.PI*v);
+    const y=cy+(k-1)*H*.17+edge*H*.03*(Math.sin(v*Math.PI*6*fq+t*.0011*(k+1)+ph*6)+ (.35+hc*.6)*Math.sin(v*Math.PI*18*fq-t*.0019)+.2*Math.sin(v*Math.PI*41-t*.003));
+    x?cx.lineTo(x,y):cx.moveTo(x,y)}cx.strokeStyle=`rgba(${col},${al})`;cx.lineWidth=1;cx.stroke()});
+  // centre line
+  cx.fillStyle='rgba(241,241,234,.05)';cx.fillRect(0,cy-.5,W,1);
+}
+function frame(t){if(motion){waves(t);requestAnimationFrame(frame)}}
+waves(0);if(motion)requestAnimationFrame(frame);
+const pwr=$('#pwr');pwr.addEventListener('click',()=>{motion=!motion;pwr.setAttribute('aria-pressed',motion);$('#pwrp').setAttribute('stroke',motion?'#D8F23C':'#727B79');if(motion)requestAnimationFrame(frame)});
+if(RM)$('#pwrp').setAttribute('stroke','#727B79');
+// redraw static wave when knobs move with motion off
+const _oc=onChange;onChange=function(k){_oc(k);if(!motion&&(k==='control'||k==='character'))waves(performance.now())};
+/* ===== nav: scroll meter + active section ===== */
+const secs=['macros','modules','learn','presets','specs'].map(id=>document.getElementById(id));const navA=[...document.querySelectorAll('.nav-links a')];
+function navUpd(){const docH=document.documentElement.scrollHeight-innerHeight||1,lv=clamp(scrollY/docH,0,1);$('#nmr').setAttribute('width',(60*lv).toFixed(1));$('#nmp').setAttribute('transform',`translate(${(59*lv).toFixed(1)} 0)`);$('#nmclip').setAttribute('opacity',lv>.995?1:0);
+  let cur=null;secs.forEach((s,k)=>{if(s.getBoundingClientRect().top<innerHeight*.4)cur=k});navA.forEach((a,k)=>a.classList.toggle('on',k===cur))}
+addEventListener('scroll',navUpd,{passive:true});navUpd();
+})();
+</script>
+
+<script src="assets/itmr.js"></script>
+</body>
+</html>
