@@ -1,8 +1,8 @@
 # ITMR Audio website
 
 Static product site for Arc Vox and Arc Fx. The public root currently serves the
-coming-soon page; the complete product-site draft is retained at
-`full-site.html` for later launch.
+coming-soon page. The prior full landing page remains recoverable from Git
+history when it is time to launch.
 
 ## Early-access signups
 
